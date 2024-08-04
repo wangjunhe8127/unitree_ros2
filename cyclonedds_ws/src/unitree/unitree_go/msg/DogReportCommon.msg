@@ -1,0 +1,11 @@
+std_msgs/Header header
+# 位置、姿态
+geometry_msgs/Pose pose
+# 速度
+Speed speed
+# 高度
+float64 body_height
+# 陀螺仪
+geometry_msgs/Vector3 gyroscope
+# 加速度计
+geometry_msgs/Vector3 accelerometer

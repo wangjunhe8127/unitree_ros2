@@ -1,7 +1,7 @@
-float32 t_from_start
-float32 x
-float32 y
-float32 yaw
-float32 vx
-float32 vy
-float32 vyaw
+float64 t_from_start
+float64 x
+float64 y
+float64 yaw
+float64 vx
+float64 vy
+float64 vyaw

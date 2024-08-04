@@ -50,6 +50,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/UwbState.msg"
         "msg/UwbSwitch.msg"
         "msg/WirelessController.msg"
+        "msg/Speed.msg"
+        "msg/DogReportCommon.msg"
+        "msg/DogControlCommand.msg"
   DEPENDENCIES geometry_msgs
 )
 
