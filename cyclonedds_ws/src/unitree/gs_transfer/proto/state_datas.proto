@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+package quadruped;
+
+message BatteryState {
+    optional int32 status = 1;
+    optional int32 soc = 2;
+    optional int32 current = 3;
+    optional int32 cycle = 4;
+}
+
+message IMUState {
+    repeated float quaternion = 1 [packed = true];      // 四元数数组
+    repeated float gyroscope = 2 [packed = true];       // 陀螺仪数据数组
+    repeated float accelerometer = 3 [packed = true];   // 加速度计数据数组
+    repeated float rpy = 4 [packed = true];             // 角度（roll, pitch, yaw）数组
+    optional int32 temperature = 5;        // 温度
+}
+
+message GlobalLocation {
+    repeated float position = 1 [packed = true];        // 位置数组
+    repeated float velocity = 2 [packed = true];        // 速度数组
+    optional float yaw_speed = 3;       // 偏航角速度
+}
+
+message BodyLocation {
+    repeated int32 foot_force = 1 [packed = true];        // 足部受力数组
+    optional float body_height = 2;     // 机身高度
+    repeated float foot_position_body = 3 [packed = true];  // 足部位置数组（相对于机身）
+    repeated float foot_speed_body = 4 [packed = true];     // 足部速度数组（相对于机身）
+}
+
+message StateDatas {
+    optional bool obstacle_avoid_mode = 1 [default = false];
+    optional string sport_mode = 2 [default = "normal"];
+    optional int32 high_level_mode = 3 [default = 0];
+    optional float foot_raise_height = 5 [default = 0.0];
+    optional int32 gait_type = 6 [default = 0];
+    optional BatteryState battery_state = 7;
+    optional IMUState imu_state = 8;
+    optional GlobalLocation global_location = 9;
+    optional BodyLocation body_location = 10;
+}
