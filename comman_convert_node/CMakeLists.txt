@@ -36,6 +36,5 @@ ament_target_dependencies(command_convert_node_exe ${DEPENDENCY_LIST})
 
 install(TARGETS 
         command_convert_node_exe
-        DESTINATION)
-
+        DESTINATION lib/${PROJECT_NAME})
 ament_package()
