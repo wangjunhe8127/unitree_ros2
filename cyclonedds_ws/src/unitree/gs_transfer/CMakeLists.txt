@@ -17,10 +17,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # Include and link directories
+include_directories(/usr/local/include /usr/include)
 include_directories(include)
 include_directories(proto)
 link_directories(src)
-
+link_directories(/usr/local/lib /usr/lib)
 # Dependency list (excluding protobuf)
 set(DEPENDENCY_LIST
   unitree_go
