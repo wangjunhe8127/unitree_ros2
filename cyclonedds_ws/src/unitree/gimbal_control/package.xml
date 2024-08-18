@@ -1,0 +1,30 @@
+<package format="3">
+  <name>gimbal_control_node</name>
+  <version>0.0.0</version>
+  <description>RTSP Streamer Node</description>
+  <maintainer email="user@todo.todo">TODO: Maintainer Name</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>rclcpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>OpenCV</build_depend>
+  <build_depend>unitree_go</build_depend>
+
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>OpenCV</exec_depend>
+
+  <!-- <build_depend>rosidl_default_generators</build_depend> -->
+  <!-- <exec_depend>builtin_interfaces</exec_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group> -->
+
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

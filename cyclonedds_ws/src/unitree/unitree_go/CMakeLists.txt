@@ -53,6 +53,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/Speed.msg"
         "msg/DogReportCommon.msg"
         "msg/DogControlCommand.msg"
+        "msg/GimbalStatus.msg"
+        "msg/GimbalControl.msg"
   DEPENDENCIES geometry_msgs
 )
 
