@@ -17,7 +17,6 @@ include_directories(include)
 link_directories(src)
 set (
   DEPENDENCY_LIST
-  Eigen3
   unitree_go
   rclcpp
   std_msgs
@@ -26,14 +25,13 @@ set (
 )
 find_package(geometry_msgs REQUIRED)
 find_package(ament_cmake REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(unitree_go REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 
-add_executable(run_test_node src/run_test_node.cpp)
-ament_target_dependencies(run_test_node ${DEPENDENCY_LIST})
+add_executable(run_test_node_exe src/run_test_node.cpp)
+ament_target_dependencies(run_test_node_exe ${DEPENDENCY_LIST})
 
 install(TARGETS 
         run_test_node_exe

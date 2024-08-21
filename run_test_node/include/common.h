@@ -1,12 +1,23 @@
-#include <Eigen/Core>
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+inline double NormalizeAngle(const double angle) {
+  double a = std::fmod(angle + M_PI, 2.0 * M_PI);
+  if (a < 0.0) {
+    a += (2.0 * M_PI);
+  }
+  return a - M_PI;
+}
+inline double QuaternionToHeading(const double qw, const double qx,
+                                const double qy, const double qz) {
+    // the heading is zero when the car is pointing East.
+    double siny_cosp = +2.0 * (qw * qz + qx * qy);
+    double cosy_cosp = +1.0 - 2.0 * (qy * qy + qz * qz);
+    return NormalizeAngle(atan2(siny_cosp, cosy_cosp));
+}
 
-double convert_orientation_to_eular(geometry_msgs::msg::Pose &pose) {
-  Eigen::Quaterniond quaternion(pose.orientation.w, pose.orientation.x,
-                                pose.orientation.y, pose.orientation.z);
-  Eigen::Vector3d eulerAngle = quaternion.matrix().eulerAngles(2, 1, 0);
-  return eulerAngle(0);
+double convert_orientation_to_eular(geometry_msgs::msg::Quaternion &quaternion) {
+  double heading = QuaternionToHeading(quaternion.w, quaternion.x,quaternion.y,quaternion.z);
+  return heading;
 }
 class PIDController {
 public:

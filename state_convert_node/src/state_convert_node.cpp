@@ -21,8 +21,8 @@ using std::placeholders::_1;
   {
     unitree_go::msg::DogReportCommon command;
     command.pose.position.x = data->position[0];
-    command.pose.position.y = data->position[0];
-    command.pose.position.z = data->position[0];
+    command.pose.position.y = data->position[1];
+    command.pose.position.z = data->position[2];
     command.pose.orientation.x = data->imu_state.quaternion[1];
     command.pose.orientation.y = data->imu_state.quaternion[2];
     command.pose.orientation.z = data->imu_state.quaternion[3];
