@@ -21,6 +21,7 @@ set (
   rclcpp
   std_msgs
   rosbag2_cpp
+  geometry_msgs
 )
 
 find_package(ament_cmake REQUIRED)
@@ -28,6 +29,7 @@ find_package(unitree_go REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 add_executable(planning_node_exe src/planning_node.cpp)
 ament_target_dependencies(planning_node_exe ${DEPENDENCY_LIST})

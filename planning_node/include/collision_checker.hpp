@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "road_boundary_map.h"
+#include "road_boundary_map.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,8 +42,8 @@ public:
   }
   void SetSearchMap(const SearchIn &search_in) {
     road_boundary_map_->ClearBoundary();
-    road_boundary_map_->SetBoundary(search_in);
-    // road_boundary_map_->SetHightMapPoint(search_in);
+    // road_boundary_map_->SetBoundary(search_in);
+    road_boundary_map_->SetHightMapPoint(search_in);
     road_boundary_map_->GetMapLog();
   }
   /**

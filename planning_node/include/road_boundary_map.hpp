@@ -53,8 +53,8 @@ public:
   }
   void SetHightMapPoint(const SearchIn &search_in) {
     for (int i = 0; i < static_cast<int>(search_in.map_data.size()); i++) {
-      if (search_in.map_data.at(i)[2] > 0.25) {
-        SetMapPoint(search_in.map_data.at(i)[0], search_in.map_data.at(i)[1]);
+      if (search_in.map_data.at(i).hight > 0.25) {
+        SetMapPoint(search_in.map_data.at(i).x, search_in.map_data.at(i).y);
       }
     }
   }
@@ -78,6 +78,9 @@ public:
     }
   }
   void GetMapLog() {
+    std::cout << "start_record" << std::endl;
+    std::cout << "bias_x:"<<x_bias_boundary_map_<< std::endl;
+    std::cout << "bias_y:"<<y_bias_boundary_map_<< std::endl;
     for (auto point : boundary_map_) {
       std::cout << "boundary_map_x:"
                 << point.first * pos_resolution_ + x_bias_boundary_map_
@@ -86,6 +89,7 @@ public:
                 << point.second * pos_resolution_ + y_bias_boundary_map_
                 << std::endl;
     }
+    std::cout << "end_record" << std::endl;
   }
 
 private:
