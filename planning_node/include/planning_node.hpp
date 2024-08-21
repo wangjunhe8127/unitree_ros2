@@ -5,11 +5,11 @@
 #include <vector>
 #include "common.hpp"
 
+namespace unitree {
 namespace planning {
-namespace path {
-class SearchNode : public rclcpp::Node {
+class PlanningNode : public rclcpp::Node {
 public:
-  SearchNode();
+  PlanningNode();
 
 private:
   void state_callback(unitree_go::msg::DogReportCommon::SharedPtr data);
@@ -19,6 +19,7 @@ private:
   rclcpp::Subscription<unitree_go::msg::HeightMap>::SharedPtr map_suber_;
   rclcpp::Subscription<unitree_go::msg::DogReportCommon>::SharedPtr
       state_suber_;
+  rclcpp::TimerBase::SharedPtr run_timer_;
   bool state_receive_{false};
   bool map_receive_{false};
   bool routing_receive_{true};

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(search_node)
+project(planning_node)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -29,11 +29,11 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 
-add_executable(search_node_exe src/search_node.cpp)
-ament_target_dependencies(search_node_exe ${DEPENDENCY_LIST})
+add_executable(planning_node_exe src/planning_node.cpp)
+ament_target_dependencies(planning_node_exe ${DEPENDENCY_LIST})
 
 install(TARGETS 
-        search_node_exe
+        planning_node_exe
         DESTINATION  lib/${PROJECT_NAME})
 
 ament_package()
