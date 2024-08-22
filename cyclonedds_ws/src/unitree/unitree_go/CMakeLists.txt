@@ -55,6 +55,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/DogControlCommand.msg"
         "msg/GimbalStatus.msg"
         "msg/GimbalControl.msg"
+        "msg/Routing.msg"
   DEPENDENCIES geometry_msgs
 )
 

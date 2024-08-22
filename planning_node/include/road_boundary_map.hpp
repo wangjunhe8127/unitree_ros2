@@ -89,7 +89,7 @@ public:
                 << point.second * pos_resolution_ + y_bias_boundary_map_
                 << std::endl;
     }
-    std::cout << "end_record" << std::endl;
+    
   }
 
 private:

@@ -42,8 +42,8 @@ public:
   }
   void SetSearchMap(const SearchIn &search_in) {
     road_boundary_map_->ClearBoundary();
-    // road_boundary_map_->SetBoundary(search_in);
     road_boundary_map_->SetHightMapPoint(search_in);
+    road_boundary_map_->SetBoundary(search_in);
     road_boundary_map_->GetMapLog();
   }
   /**
@@ -52,7 +52,7 @@ public:
    * @param x_bias
    * @param y_bias
    */
-  void SetPosBias(StatePoint &map_origin_point) {
+  void SetPosBias(const StatePoint &map_origin_point) {
     road_boundary_map_->SetXBias(map_origin_point.x);
     road_boundary_map_->SetYBias(map_origin_point.y);
   }
