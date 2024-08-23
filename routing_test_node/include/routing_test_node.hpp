@@ -23,4 +23,7 @@ class RoutingTesetNode : public rclcpp::Node{
   double init_heading_{0.0};
   double init_x_{0.0};
   double init_y_{0.0};
+  double dis_finish_th_{0.1};
+  double yaw_finish_th_{0.1};
+  geometry_msgs::msg::Point end_point_;
 };
