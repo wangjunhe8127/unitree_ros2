@@ -18,6 +18,7 @@ void RoutingTesetNode::run_step() {
 }
 void RoutingTesetNode::loc_callback(
     unitree_go::msg::DogReportCommon::SharedPtr data) {
+    unitree_go::msg::Routing routing;
   double boundary_width = 0.5;
   double spacing = 0.06;
   double end_s = 6.0;
@@ -31,6 +32,9 @@ void RoutingTesetNode::loc_callback(
     init_heading_ = heading;
     init_x_ = x_;
     init_y_ = x_;
+    end_point_.x = end_s * cos(init_heading_) + init_x_;
+    end_point_.y = end_s * sin(init_heading_) + init_y_;
+    end_point_.z = init_heading_;
     for (int i = 0; i < numPoints; ++i) {
       double dx = i * spacing * cos(heading);
       double dy = i * spacing * sin(heading);
@@ -45,6 +49,15 @@ void RoutingTesetNode::loc_callback(
       ref_.push_back(refPoint);
       left_.push_back(leftPoint);
       right_.push_back(rightPoint);
+    }
+  } else {
+    double dx = x_ - end_point_.x;
+    double dy = y_ - end_point_.y;
+    double dyaw = heading - end_point.z;
+    if (std::hypot(dx, dy) < dis_finish_th_ && abs(dyaw < yaw_finish_th_)) {
+      routing.finish = 1;
+      routing_puber_->publish(routing);
+      return ;
     }
   }
   double minDistance = std::numeric_limits<double>::max();
@@ -69,7 +82,7 @@ void RoutingTesetNode::loc_callback(
   ref_ = newRef;
   left_ = newLeft;
   right_ = newRight;
-  unitree_go::msg::Routing routing;
+
   for (int i = 0; i < ref_.size(); i++) {
     geometry_msgs::msg::Point point;
     point.x = ref_.at(i).first;
@@ -92,10 +105,7 @@ void RoutingTesetNode::loc_callback(
     routing.right_line.push_back(point);
   }
   geometry_msgs::msg::Point point;
-  point.x = end_s * cos(init_heading_) + init_x_;
-  point.y = end_s * sin(init_heading_) + init_y_;
-  point.z = init_heading_;
-  routing.end_point = point;
+  routing.end_point = end_point_;
   routing.next_heading_class = 1;
   routing_puber_->publish(routing);
 
