@@ -54,6 +54,8 @@ void RoutingTesetNode::loc_callback(
     double dx = x_ - end_point_.x;
     double dy = y_ - end_point_.y;
     double dyaw = heading - end_point.z;
+    std::cout << "routing_end_dis:" << std::hypot(dx, dy) << std::endl;
+    std::cout << "routing_end_yaw:" << abs(dyaw < yaw_finish_th_) << std::endl;
     if (std::hypot(dx, dy) < dis_finish_th_ && abs(dyaw < yaw_finish_th_)) {
       routing.finish = 1;
       routing_puber_->publish(routing);
