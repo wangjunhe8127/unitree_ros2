@@ -96,6 +96,7 @@ void RoutingTesetNode::loc_callback(
   point.y = end_s * sin(init_heading_) + init_y_;
   point.z = init_heading_;
   routing.end_point = point;
+  routing.next_heading_class = 1;
   routing_puber_->publish(routing);
 
 };

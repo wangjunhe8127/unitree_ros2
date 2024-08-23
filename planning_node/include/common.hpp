@@ -19,6 +19,12 @@ struct StatePoint {
   double x;
   double y;
   double heading;
+  double v;
+  bool isEqual(const StatePoint& other, double epsilon = 1e-6) const {
+      return std::fabs(x - other.x) < epsilon &&
+              std::fabs(y - other.y) < epsilon &&
+              std::fabs(heading - other.heading) < epsilon;
+  }
 };
 struct SearchArea {
   double min_x;
@@ -26,7 +32,19 @@ struct SearchArea {
   double min_y;
   double max_y;
 };
+struct PlanningPoint {
+  double s;
+  double t;
+  double x;
+  double y;
+  double yaw;
+  double vx;
+  double vy;
+  double vyaw;
+};
+using PlanningResult = std::vector<PlanningPoint>;
 struct SearchIn {
+  int next_heading_class; // 0: 和end_point同向， 1：左转90度，-1：右转90度
   StatePoint loc_point;
   StatePoint end_point;
   StatePoint map_origin_point;
@@ -47,7 +65,6 @@ struct SearchSegmentResult {
   std::vector<double> accumulated_s;
   int gear;  // 1:P, 2:R, 3:N, 4:D
 };
-using SearchOut = std::vector<StatePoint>;
 /************************search_config**************************/
 struct HybirdAStarConfig {
   double pos_resolution{0.06};

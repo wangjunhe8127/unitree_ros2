@@ -27,7 +27,7 @@ public:
     SearchNode::y_bias = search_in_.search_area.min_y;
     SearchNode::theta_bias = -M_PI;
   }
-  bool Process(SearchOut &output) {
+  bool Process(PlanningResult &planning_result) {
 
     start_node_ = std::make_shared<SearchNode>(
       std::vector<double>({search_in_.loc_point.x}),
@@ -91,7 +91,12 @@ public:
         break;
       }
   }
-      if (!GetResult()) {
+      if (!GetPath(planning_result)) {
+        std::cout << "end_record" << std::endl;
+        return false;
+      }
+      if (!GetTrajectory(planning_result)) {
+        std::cout << "end_record" << std::endl;
         return false;
       }
       return true;
@@ -111,7 +116,177 @@ bool ReachedEndCheck(std::shared_ptr<SearchNode> node) {
   }
   return true;
 }
-  bool GetResult() {
+bool GetTrajectory(PlanningResult &planning_result) {
+  double s = 0.0;
+  if (static_cast<int>(planning_result.size()) == 1) {
+    std::cout<<"planning_result_size:" << planning_result.size() << std::endl;
+    planning_result.at(0).s = 0.0;
+    planning_result.at(0).t = 0.0;
+    planning_result.at(0).vx = 0.0;
+    planning_result.at(0).vy = 0.0;
+    planning_result.at(0).vyaw = 0.0;
+    return true;
+  }
+  std::vector<double> s_arr;
+  s_arr.push_back(0.0);
+  for (int i = 1; i < static_cast<int>(planning_result.size()); i++) {
+    double dx = planning_result.at(i).x - planning_result.at(i - 1).x;
+    double dy = planning_result.at(i).y - planning_result.at(i - 1).y;
+    s += std::hypot(dx, dy);
+    s_arr.push_back(s);
+  }
+  // TODO(wjh) optimal trajectory
+  //***********************当前方案************************/
+  // 先根据s，v,max_v,a等信息计算t
+  // 再根据t/30得到每一个点的时间间隔
+  // 然后根据curr_t，反查所在的运动段（加速/匀速/减速），并获得当前的s，同时获得插值点，以及对每个点赋值对应的速度信息
+  // vyaw直接由前后点的heading_rate得到
+
+  double start_v = search_in_.loc_point.v;
+  double critical_len;
+  double run_time;
+  if (start_v > max_v) {
+    start_v = max_v;
+  }
+  double startv2 = pow(start_v, 2);
+  double endv2 = pow(end_v, 2);
+  double maxv2 = pow(max_v, 2);
+  double start_acc_len = (maxv2 - startv2) / (2 * max_acc);
+  double stop_acc_len = (maxv2 - endv2) / (2 * max_acc);
+  critical_len = start_acc_len + stop_acc_len;
+  if (s_arr.back() >= critical_len) {
+    run_time = (max_v - start_v) / max_acc + (max_v - end_v) / max_acc +
+           (s_arr.back() - critical_len) / max_v;
+  } else {
+    double tmpv = sqrt(0.5 * (startv2 + endv2 + 2 * max_acc * s_arr.back()));
+    run_time = (tmpv - start_v) / max_acc + (tmpv - end_v) / max_acc;
+  }
+  std::cout<<"start_v:" << start_v <<std::endl;
+  std::cout<<"start_acc_len:" << start_acc_len <<std::endl;
+  std::cout<<"stop_acc_len:" << stop_acc_len <<std::endl;
+  std::cout<<"critical_len:" << critical_len <<std::endl;
+  std::cout<<"plan_t:" << run_time <<std::endl;
+  std::cout<<"plan_s:" << s_arr.back() << std::endl;
+  double unit_time = run_time / 30.0;
+  double curr_t = 0.0;
+  PlanningResult new_planning_result;
+  for (int i = 0; i < 30; i++) {
+    double curr_v, curr_s,curr_yaw, curr_x, curr_y;
+    curr_t += unit_time; // 不是从t=0开始
+    PlanningPoint planning_point;
+    GetVandS(planning_result, s_arr, curr_t, curr_s, curr_v);
+    GetPointByS(planning_result, curr_s, s_arr, curr_yaw, curr_x, curr_y);
+    planning_point.t = curr_t;
+    planning_point.s = curr_s;
+    planning_point.x = curr_x;
+    planning_point.y = curr_y;
+    planning_point.yaw = curr_yaw;
+    planning_point.vx = curr_v * std::cos(curr_yaw);
+    planning_point.vy = curr_v * std::sin(curr_yaw);
+    new_planning_result.push_back(planning_point);
+  }
+  planning_result = new_planning_result;
+  // 计算vyaw
+  for (int i = 0; i < 29; i++) {
+    planning_result.at(i).vyaw = planning_result.at(i + 1).vyaw - planning_result.at(i).vyaw;
+  }
+  planning_result.at(29).vyaw = 0.0;
+  return true;
+}
+  void GetVandS(const PlanningResult &planning_result, const std::vector<double> &s_arr, const double &curr_t, double &curr_s, double &curr_v) {
+    double start_v = search_in_.loc_point.v;
+    double critical_len;
+  if (start_v > max_v) {
+    start_v = max_v;
+  }
+  double startv2 = pow(start_v, 2);
+  double endv2 = pow(end_v, 2);
+  double maxv2 = pow(max_v, 2);
+  double start_acc_len = (maxv2 - startv2) / (2 * max_acc);
+  double stop_acc_len = (maxv2 - endv2) / (2 * max_acc);
+  critical_len = start_acc_len + stop_acc_len;
+  double locallength = s_arr.back();
+  if (locallength >= critical_len) {
+    double t1 = (max_v - start_v) / max_acc;
+    double t2 = t1 + (locallength - critical_len) / max_v;
+    if (curr_t <= t1) {
+      curr_v = start_v + max_acc * curr_t;
+      curr_s = start_v * curr_t + 0.5 * max_acc * pow(curr_t, 2);
+      return ;
+    } else if (curr_t <= t2) {
+      curr_v = start_v + max_acc * t1;
+      curr_s = start_v * t1 + 0.5 * max_acc * pow(t1, 2) + (curr_t - t1) * max_v;
+      return ;
+    } else {
+      curr_v = start_v + max_acc * t1 - max_acc * (curr_t - t2);
+      curr_s = start_v * t1 + 0.5 * max_acc * pow(t1, 2) + (t2 - t1) * max_v +
+             max_v * (curr_t - t2) - 0.5 * max_acc * pow(curr_t - t2, 2);
+      return ;
+    }
+  } else {
+    double tmpv = sqrt(0.5 * (startv2 + endv2 + 2 * max_acc * locallength));
+    double tmpt = (tmpv - start_v) / max_acc;
+    if (curr_t <= tmpt) {
+      curr_v = start_v + max_acc * curr_t;
+      curr_s = start_v * curr_t + 0.5 * max_acc * pow(curr_t, 2);
+      return ;
+    } else {
+      curr_v = tmpv + max_acc + (curr_t - tmpt);
+      curr_s = start_v * tmpt + 0.5 * max_acc * pow(tmpt, 2) +
+               tmpv * (curr_t - tmpt) - 0.5 * max_acc * pow(curr_t - tmpt, 2);
+      return ;
+    }
+  }
+  }
+  void GetPointByS(const PlanningResult &planning_result, double curr_s, const std::vector<double> &s_arr, double &curr_yaw, double &curr_x, double &curr_y) {
+    int index = 0;
+    for (index = 0; index < static_cast<int>(s_arr.size()); index++) {
+        if (s_arr[index] + 0.00000001 >= curr_s) {
+            break;
+        }
+    }
+      std::cout << "s_arr.size():" << s_arr.size() << std::endl;
+      std::cout << "curr_s:" << curr_s << std::endl;
+      std::cout << "index2:" << index << std::endl;
+      std::cout << "s_arr.back:" << s_arr.back() << std::endl;
+    if (index < static_cast<int>(s_arr.size()) && s_arr[index] == curr_s) {
+      std::cout << "s_arr.size():" << s_arr.size() << std::endl;
+      std::cout << "curr_s:" << curr_s << std::endl;
+      std::cout << "index0:" << index << std::endl;
+      std::cout << "s_arr.back:" << s_arr.back() << std::endl;
+      curr_yaw = planning_result.at(index).yaw;
+      curr_x = planning_result.at(index).x;
+      curr_y = planning_result.at(index).y;
+      return;
+    }
+    // 这个情况不会出现，会在得到s的函数里保证
+    if (index == 0 || index == static_cast<int>(s_arr.size())) {
+      std::cout << "s_arr.size():" << s_arr.size() << std::endl;
+      std::cout << "curr_s:" << curr_s << std::endl;
+      std::cout << "index1:" << index << std::endl;
+      std::cout << "s_arr.back:" << s_arr.back() << std::endl;
+        throw std::out_of_range("curr_s is out of the bounds of the s array");
+    }
+    // 执行线性插值
+    double s1 = s_arr.at(index - 1);
+    double s2 = s_arr.at(index);
+    double x1 = planning_result.at(index - 1).x;
+    double x2 = planning_result.at(index).x;
+    double y1 = planning_result.at(index - 1).y;
+    double y2 = planning_result.at(index).y;
+    double x_interp = x1 + (x2 - x1) * (curr_s - s1) / (s2 - s1);
+    double y_interp = y1 + (y2 - y1) * (curr_s - s1) / (s2 - s1);
+    curr_yaw = planning_result.at(index - 1).yaw;
+    curr_x = x_interp;
+    curr_y = y_interp;
+      std::cout << "s_arr.size():" << s_arr.size() << std::endl;
+      std::cout << "curr_s:" << curr_s << std::endl;
+      std::cout << "index0:" << index << std::endl;
+      std::cout << "s_arr.back:" << s_arr.back() << std::endl;
+      std::cout << "planning_result.at(index - 1).x:" << planning_result.at(index - 1).x << std::endl;
+      std::cout << "planning_result.at(index - 1).y:" << planning_result.at(index - 1).y << std::endl;
+  }
+  bool GetPath(PlanningResult &planning_result) {
     std::shared_ptr<SearchNode> current_node = final_node_;
     std::vector<double> hybrid_a_x;
     std::vector<double> hybrid_a_y;
@@ -136,19 +311,17 @@ bool ReachedEndCheck(std::shared_ptr<SearchNode> node) {
     std::reverse(hybrid_a_x.begin(), hybrid_a_x.end());
     std::reverse(hybrid_a_y.begin(), hybrid_a_y.end());
     std::reverse(hybrid_a_theta.begin(), hybrid_a_theta.end());
-    path_result_.clear();
-    path_result_.emplace_back();
-    SearchSegmentResult *current_path = &(path_result_.back());
-    double min_replacement = 0.01;
+    planning_result.clear();
     // init gear
     for (size_t i = 0; i < hybrid_a_x.size(); i++) {
       std::cout<<"search_x:" << hybrid_a_x[i]<<std::endl;
       std::cout<<"search_y:" << hybrid_a_y[i]<<std::endl;
-      current_path->x.push_back(hybrid_a_x[i]);
-      current_path->y.push_back(hybrid_a_y[i]);
-      current_path->theta.push_back(hybrid_a_theta[i]);
+      PlanningPoint planning_point;
+      planning_point.x = hybrid_a_x[i];
+      planning_point.y = hybrid_a_y[i];
+      planning_point.yaw = hybrid_a_theta[i];
+      planning_result.push_back(planning_point);
     }
-    std::cout << "end_record" << std::endl;
     return true;
   }
   std::shared_ptr<SearchNode>
@@ -288,8 +461,10 @@ private:
       return left.second >= right.second;
     }
   };
+  double max_acc = 0.2;
+  double max_v = 0.5;
+  double end_v = 0.0; // 这里需要注意，每次搜索不是到当前路线的航点结束，而是将搜索终点局限在hight_map的区域内[routing只发了这一段&&search grid限制]
   SearchIn search_in_;
-  std::vector<SearchSegmentResult> path_result_;
   std::shared_ptr<SearchNode> start_node_;
   std::shared_ptr<SearchNode> end_node_;
   std::shared_ptr<SearchNode> final_node_;
