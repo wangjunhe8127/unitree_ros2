@@ -16,10 +16,44 @@ void RoutingTesetNode::run_step() {
   if (receive_loc_) {
   }
 }
+bool RoutingTesetNode::LoadWayPoints(const std::string &waypoint_path) {
+  std::ifstream file(waypoint_path);
+  if (!file.is_open()) {
+    std::cerr << "无法打开文件：" << filename << std::endl;
+    return false;
+  }
+  std::string line;
+  std::vector<std::vector<double>> waypoints;
+  double x, y, yaw;
+  // 逐行读取数据
+  while (getline(file, line)) {
+    std::vector<double> point;
+    std::istringstream iss(line); // 将读取的行转换为字符串流
+    std::string value;
+    std::getline(iss, value, ',');
+    x = std::stod(value);
+    point.push_back(x);
+    // 读取第二个数据
+    std::getline(iss, value, ',');
+    y = std::stod(value); // 转换为double
+    point.push_back(y);
+    // 读取第三个数据
+    std::getline(iss, value);
+    yaw = std::stod(value); // 转换为double
+    point.push_back(yaw);
+    // 输出读取的数据
+    std::cout << "读取的数据: " << num1 << ", " << num2 << ", " << num3
+              << std::endl;
+    waypoints.push_back(point);
+  }
+  // 关闭文件
+  file.close();
+  return true;
+}
 void RoutingTesetNode::loc_callback(
     unitree_go::msg::DogReportCommon::SharedPtr data) {
-    unitree_go::msg::Routing routing;
-  double boundary_width = 2.0;
+  unitree_go::msg::Routing routing;
+  double boundary_width = 0.5;
   double spacing = 0.06;
   double end_s = 6.0;
   int numPoints = static_cast<int>(end_s / spacing);
@@ -69,7 +103,7 @@ void RoutingTesetNode::loc_callback(
       std::cout << "end" <<std::endl;
       routing.finish = 1;
       routing_puber_->publish(routing);
-      return ;
+      return;
     }
   }
     std::cout << "rr:" << std::endl;
@@ -122,7 +156,6 @@ std::cout << "tt:" << std::endl;
   routing.end_point = end_point_;
   routing.next_heading_class = 1;
   routing_puber_->publish(routing);
-
 };
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);                           // Initialize rclcpp

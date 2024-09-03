@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include "rclcpp/rclcpp.hpp"
 #include "unitree_go/msg/dog_report_common.hpp"
 #include "unitree_go/msg/routing.hpp"
@@ -10,8 +13,10 @@ class RoutingTesetNode : public rclcpp::Node{
   RoutingTesetNode();
  private:
   void run_step();
+  void load_waypoints(const std::string &waypoint_path);
   std::string loc_topic_name_ = "/control/dog_report_common";
-  std::string routing_topic_name_ = "/control/routing";
+  std::string routing_topic_name_ = "/planning/routing";
+  std::string routing_topic_name_ = "/planning/routing";
   void loc_callback(unitree_go::msg::DogReportCommon::SharedPtr data);
   rclcpp::Subscription<unitree_go::msg::DogReportCommon>::SharedPtr loc_suber_;
   rclcpp::Publisher<unitree_go::msg::Routing>::SharedPtr routing_puber_;
