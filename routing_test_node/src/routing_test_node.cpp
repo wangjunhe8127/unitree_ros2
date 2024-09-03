@@ -10,7 +10,7 @@ RoutingTesetNode::RoutingTesetNode()
   loc_puber_ =
       this->create_publisher<geometry_msgs::msg::Pose>(loc_topic_name_, 10);
   nav_status_puber_ =
-      this->create_publisher<std_msgs::msg::Bool>(loc_topic_name_, 10);
+      this->create_publisher<std_msgs::msg::Bool>(nav_status_topic_name_, 10);
   run_timer_ =
       this->create_wall_timer(std::chrono::milliseconds(20),
                               std::bind(&RoutingTesetNode::run_step, this));
@@ -26,7 +26,7 @@ void RoutingTesetNode::run_step() {
 bool RoutingTesetNode::load_waypoints(const std::string &waypoint_path) {
   std::ifstream file(waypoint_path);
   if (!file.is_open()) {
-    std::cerr << "无法打开文件：" << filename << std::endl;
+    std::cerr << "无法打开文件：" << waypoint_path << std::endl;
     return false;
   }
   std::string line;
@@ -49,8 +49,7 @@ bool RoutingTesetNode::load_waypoints(const std::string &waypoint_path) {
     yaw = std::stod(value); // 转换为double
     point.push_back(yaw);
     // 输出读取的数据
-    std::cout << "读取的数据: " << num1 << ", " << num2 << ", " << num3
-              << std::endl;
+    std::cout << "读取的数据: " << x << ", " << y << ", " << yaw << std::endl;
     waypoints_.push_back(point);
   }
   // 关闭文件
@@ -79,7 +78,7 @@ void RoutingTesetNode::loc_callback() {
     RCLCPP_ERROR(this->get_logger(), "Could not transform: %s", ex.what());
   }
 }
-void RoutingTesetNode::check_waypoint_finish() {
+bool RoutingTesetNode::check_waypoint_finish() {
   if (arrive_end_) {
     nav_status_.data = false;
     nav_status_puber_->publish(nav_status_);
@@ -88,7 +87,7 @@ void RoutingTesetNode::check_waypoint_finish() {
   double loc_yaw, diff_dis, diff_yaw;
   diff_dis = std::hypot(loc_pose_.position.x - waypoints_.at(waypoint_idx_).at(0),
                         loc_pose_.position.y - waypoints_.at(waypoint_idx_).at(1));
-  loc_yaw = convert_orientation_to_eular(receive_loc_.orientation);
+  loc_yaw = unitree::planning::convert_orientation_to_eular(loc_pose_.orientation);
   diff_yaw = abs(loc_yaw - waypoints_.at(waypoint_idx_).at(2));
   if (diff_dis < diff_dis_th_ && diff_yaw < diff_yaw_th_) {
     if (waypoint_idx_ == static_cast<int>(waypoints_.size() - 1)) {

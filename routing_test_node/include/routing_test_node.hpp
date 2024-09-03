@@ -10,14 +10,17 @@
 #include "common.hpp"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
-#include "geometry_msgs/msg/TransformStamped.hpp"
+#include "std_msgs/msg/bool.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 class RoutingTesetNode : public rclcpp::Node{
  public:
   RoutingTesetNode();
  private:
   void run_step();
-  void load_waypoints(const std::string &waypoint_path);
-  void loc_callback(unitree_go::msg::DogReportCommon::SharedPtr data);
+
+  bool load_waypoints(const std::string &waypoint_path);
+  bool check_waypoint_finish();
+  void loc_callback();
   void send_waypoint();
   std::string loc_topic_name_ = "/routing/loc";
   std::string waypoint_topic_name_ = "/routing/waypoint";
