@@ -23,6 +23,7 @@ set (
   std_msgs
   rosbag2_cpp
   geometry_msgs
+  tf2_ros
 )
 
 find_package(ament_cmake REQUIRED)
@@ -30,6 +31,7 @@ find_package(unitree_go REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 
 add_executable(routing_test_node_exe src/routing_test_node.cpp)

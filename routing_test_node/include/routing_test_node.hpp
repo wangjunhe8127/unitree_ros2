@@ -8,27 +8,36 @@
 #include "unitree_go/msg/dog_report_common.hpp"
 #include "unitree_go/msg/routing.hpp"
 #include "common.hpp"
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "geometry_msgs/msg/TransformStamped.hpp"
 class RoutingTesetNode : public rclcpp::Node{
  public:
   RoutingTesetNode();
  private:
   void run_step();
   void load_waypoints(const std::string &waypoint_path);
-  std::string loc_topic_name_ = "/control/dog_report_common";
-  std::string routing_topic_name_ = "/planning/routing";
-  std::string routing_topic_name_ = "/planning/routing";
   void loc_callback(unitree_go::msg::DogReportCommon::SharedPtr data);
-  rclcpp::Subscription<unitree_go::msg::DogReportCommon>::SharedPtr loc_suber_;
-  rclcpp::Publisher<unitree_go::msg::Routing>::SharedPtr routing_puber_;
+  void send_waypoint();
+  std::string loc_topic_name_ = "/routing/loc";
+  std::string waypoint_topic_name_ = "/routing/waypoint";
+  std::string nav_status_topic_name_ = "/routing/nav_status";
+  // std::string boundary_topic_name_ = "/routing/boundary";
   rclcpp::TimerBase::SharedPtr run_timer_;
+  rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr loc_puber_;
+  rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr waypoint_puber_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr nav_status_puber_;
+  tf2_ros::Buffer tf_buffer;
+  tf2_ros::TransformListener tf_listener;
+  // msg
+  std_msgs::msg::Bool nav_status_;
+  geometry_msgs::msg::Pose loc_pose_;
+  geometry_msgs::msg::Point waypoint_; // x,y,yaw分别填充x,y,z
+
+  int waypoint_idx_{0};
+  std::vector<std::vector<double>> waypoints_;
+  double diff_dis_th_{0.1};
+  double diff_yaw_th_{0.1};
   bool receive_loc_{false};
-  std::vector<std::pair<double, double>> ref_;
-  std::vector<std::pair<double, double>> left_;
-  std::vector<std::pair<double, double>> right_;
-  double init_heading_{0.0};
-  double init_x_{0.0};
-  double init_y_{0.0};
-  double dis_finish_th_{0.15};
-  double yaw_finish_th_{0.06};
-  geometry_msgs::msg::Point end_point_;
+  bool arrive_end_{false};
 };
