@@ -23,7 +23,7 @@ bias_y = 0.0
 loc_x = 0.0
 loc_y = 0.0
 heading = 0.0
-log_path = "/home/wjh/code/unitree_ros2/wjh.log"
+log_path = "/home/unitree/code/unitree_ros2/run.log"
 with open(log_path, 'r') as log_file:
     while True:
         glog_line = log_file.readline()
@@ -107,9 +107,8 @@ plt.scatter(left_x_arr, left_y_arr)
 plt.scatter(right_x_arr, right_y_arr)
 plt.scatter(loc_x, loc_y)
 plt.scatter(bias_x, bias_y)
-# 计算x和y的分量，这里假设箭头长度为1
-x_component = loc_x + np.cos(heading) * 6
-y_component = loc_y + np.sin(heading) * 6
+x_component = loc_x + np.cos(heading) * 7
+y_component = loc_y + np.sin(heading) * 7
 
 plt.annotate("", xy=(x_component, y_component), xytext=(loc_x, loc_y),
                 arrowprops=dict(arrowstyle="->", connectionstyle="arc3", color='blue'))
@@ -127,6 +126,9 @@ plt.legend()
 plt.figure()
 plt.scatter(traj_t_arr, traj_vx_arr,label='s-vx')
 plt.scatter(traj_t_arr, traj_vy_arr,label='s-vy')
+plt.legend()
+plt.figure()
+plt.scatter(traj_s_arr, traj_t_arr,label='s-t')
 plt.legend()
 plt.axis('equal')
 plt.show()

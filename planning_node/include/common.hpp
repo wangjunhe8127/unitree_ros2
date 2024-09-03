@@ -68,16 +68,16 @@ struct SearchSegmentResult {
 /************************search_config**************************/
 struct HybirdAStarConfig {
   double pos_resolution{0.06};
-  double expand_radius{0.16}; // 因为是3个圆判断，dog长度为0.7，0.7/2/2
+  double expand_radius{0.4}; // 因为是3个圆判断，dog长度为0.7，0.7/2/2
   int max_search_times{20000};
   int node_explore_size{6};
-  double max_steer_angle{0.1}; // TODO(all) test
+  double max_steer_angle{1.6}; // TODO(all) test
   double node_dt{0.5}; // TODO(all) test
-  double max_steer_anglerate{0.5}; // TODO(all) test
+  double max_steer_anglerate{1.8}; // TODO(all) test
   double search_step_s{0.1}; // TODO(all) test
   double wheel_base{1.0}; // TODO(all) test
   double finish_max_delta_theta{0.5};  // TODO(all) test
-  double finish_max_delta_distance{0.05};   // TODO(all) test
+  double finish_max_delta_distance{0.1};   // TODO(all) test
   double cost_weight{1.0};
   double cost_steer{0.0};
   double cost_steerrate{0.0};

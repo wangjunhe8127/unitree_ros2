@@ -19,7 +19,7 @@ void RoutingTesetNode::run_step() {
 void RoutingTesetNode::loc_callback(
     unitree_go::msg::DogReportCommon::SharedPtr data) {
     unitree_go::msg::Routing routing;
-  double boundary_width = 0.5;
+  double boundary_width = 2.0;
   double spacing = 0.06;
   double end_s = 6.0;
   int numPoints = static_cast<int>(end_s / spacing);
@@ -27,14 +27,21 @@ void RoutingTesetNode::loc_callback(
   double y_ = data->pose.position.y;
   double heading =
       unitree::planning::convert_orientation_to_eular(data->pose.orientation);
+  std::cout << "heading: " << heading << std::endl;
+  std::cout <<"rececive";
   if (!receive_loc_) {
     receive_loc_ = true;
     init_heading_ = heading;
     init_x_ = x_;
-    init_y_ = x_;
+    init_y_ = y_;
+    std::cout << init_x_ << std::endl;
+    std::cout << init_y_ << std::endl;
     end_point_.x = end_s * cos(init_heading_) + init_x_;
     end_point_.y = end_s * sin(init_heading_) + init_y_;
     end_point_.z = init_heading_;
+    std::cout << "end_x:" << end_point_.x << std::endl;
+    std::cout << "end_y:" << end_point_.y << std::endl;
+    std::cout << end_point_.x << std::endl;
     for (int i = 0; i < numPoints; ++i) {
       double dx = i * spacing * cos(heading);
       double dy = i * spacing * sin(heading);
@@ -53,15 +60,20 @@ void RoutingTesetNode::loc_callback(
   } else {
     double dx = x_ - end_point_.x;
     double dy = y_ - end_point_.y;
-    double dyaw = heading - end_point.z;
+    double dyaw = heading - (end_point_.z + M_PI / 2.0);
+    std::cout << "end_heading:" << end_point_.z <<std::endl;
+    std::cout << "target_heading: " << M_PI / 2.0 <<std::endl;
     std::cout << "routing_end_dis:" << std::hypot(dx, dy) << std::endl;
-    std::cout << "routing_end_yaw:" << abs(dyaw < yaw_finish_th_) << std::endl;
-    if (std::hypot(dx, dy) < dis_finish_th_ && abs(dyaw < yaw_finish_th_)) {
+    std::cout << "routing_end_yaw:" << dyaw  << std::endl;
+    if (std::hypot(dx, dy) < dis_finish_th_ && abs(dyaw) < yaw_finish_th_) {
+      std::cout << "end" <<std::endl;
       routing.finish = 1;
       routing_puber_->publish(routing);
       return ;
     }
   }
+    std::cout << "rr:" << std::endl;
+
   double minDistance = std::numeric_limits<double>::max();
   int index = 0;
   for (int i = 0; i < ref_.size(); i++) {
@@ -71,7 +83,7 @@ void RoutingTesetNode::loc_callback(
       index = i;
     }
   }
-  int search_unit_num = static_cast<int>(7.62 / 2.0 / spacing);
+  int search_unit_num = static_cast<int>(3.0 / spacing);
   std::vector<std::pair<double, double>> newRef(
       ref_.begin() + index,
       std::min(ref_.begin() + index + search_unit_num, ref_.end()));
@@ -84,7 +96,7 @@ void RoutingTesetNode::loc_callback(
   ref_ = newRef;
   left_ = newLeft;
   right_ = newRight;
-
+std::cout << "tt:" << std::endl;
   for (int i = 0; i < ref_.size(); i++) {
     geometry_msgs::msg::Point point;
     point.x = ref_.at(i).first;

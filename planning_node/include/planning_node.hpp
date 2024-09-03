@@ -45,7 +45,7 @@ private:
   StatePoint last_end_point_;
   double reach_end_th_{0.1}; // 需要和routing模块中的值对齐，否则会导致不能切换航点
   double target_heading_{0.0};
-  int timer_time_{20};
+  int timer_time_{50};
   bool routing_finish_{false};
 
 };

@@ -93,7 +93,6 @@ public:
   }
       if (!GetPath(planning_result)) {
         std::cout << "end_record" << std::endl;
-        return false;
       }
       if (!GetTrajectory(planning_result)) {
         std::cout << "end_record" << std::endl;
@@ -118,15 +117,22 @@ bool ReachedEndCheck(std::shared_ptr<SearchNode> node) {
 }
 bool GetTrajectory(PlanningResult &planning_result) {
   double s = 0.0;
-  if (static_cast<int>(planning_result.size()) == 1) {
+  if (static_cast<int>(planning_result.size()) <= 1) {
     std::cout<<"planning_result_size:" << planning_result.size() << std::endl;
-    planning_result.at(0).s = 0.0;
-    planning_result.at(0).t = 0.0;
-    planning_result.at(0).vx = 0.0;
-    planning_result.at(0).vy = 0.0;
-    planning_result.at(0).vyaw = 0.0;
+    planning_result.clear();
+    PlanningPoint point;
+    point.s = 0.0;
+    point.t = 0.0;
+    point.x = search_in_.loc_point.x;
+    point.y = search_in_.loc_point.y;
+    point.yaw = search_in_.loc_point.heading;
+    point.vx = 0.0;
+    point.vy = 0.0;
+    point.vyaw = 0.0;
+    planning_result.push_back(point);
     return true;
   }
+  std::cout<<"planning_result_size1:" << planning_result.size() << std::endl;
   std::vector<double> s_arr;
   s_arr.push_back(0.0);
   for (int i = 1; i < static_cast<int>(planning_result.size()); i++) {
@@ -135,6 +141,7 @@ bool GetTrajectory(PlanningResult &planning_result) {
     s += std::hypot(dx, dy);
     s_arr.push_back(s);
   }
+  std::cout<<"s_arr.size():" << s_arr.size() << std::endl;
   // TODO(wjh) optimal trajectory
   //***********************当前方案************************/
   // 先根据s，v,max_v,a等信息计算t
@@ -207,20 +214,31 @@ bool GetTrajectory(PlanningResult &planning_result) {
   critical_len = start_acc_len + stop_acc_len;
   double locallength = s_arr.back();
   if (locallength >= critical_len) {
+    std::cout << "critical_len: " << critical_len <<std::endl;
+    std::cout << "locallength: " << locallength <<std::endl;
     double t1 = (max_v - start_v) / max_acc;
     double t2 = t1 + (locallength - critical_len) / max_v;
+    std::cout << "t1: " << t1 <<std::endl;
+    std::cout << "t2: " << t2 <<std::endl;
+    std::cout << "curr_t: " << curr_t <<std::endl;
     if (curr_t <= t1) {
       curr_v = start_v + max_acc * curr_t;
       curr_s = start_v * curr_t + 0.5 * max_acc * pow(curr_t, 2);
+      std::cout << "curr_v5: " << curr_v <<std::endl;
+      std::cout << "curr_s: " << curr_s <<std::endl;
       return ;
     } else if (curr_t <= t2) {
       curr_v = start_v + max_acc * t1;
       curr_s = start_v * t1 + 0.5 * max_acc * pow(t1, 2) + (curr_t - t1) * max_v;
+      std::cout << "curr_v4: " << curr_v <<std::endl;
+      std::cout << "curr_s: " << curr_s <<std::endl;
       return ;
     } else {
       curr_v = start_v + max_acc * t1 - max_acc * (curr_t - t2);
       curr_s = start_v * t1 + 0.5 * max_acc * pow(t1, 2) + (t2 - t1) * max_v +
              max_v * (curr_t - t2) - 0.5 * max_acc * pow(curr_t - t2, 2);
+      std::cout << "curr_v3: " << curr_v <<std::endl;
+      std::cout << "curr_s: " << curr_s <<std::endl;
       return ;
     }
   } else {
@@ -229,11 +247,20 @@ bool GetTrajectory(PlanningResult &planning_result) {
     if (curr_t <= tmpt) {
       curr_v = start_v + max_acc * curr_t;
       curr_s = start_v * curr_t + 0.5 * max_acc * pow(curr_t, 2);
+      std::cout << "curr_v2: " << curr_v <<std::endl;
+      std::cout << "curr_s: " << curr_s <<std::endl;
       return ;
     } else {
       curr_v = tmpv + max_acc + (curr_t - tmpt);
       curr_s = start_v * tmpt + 0.5 * max_acc * pow(tmpt, 2) +
                tmpv * (curr_t - tmpt) - 0.5 * max_acc * pow(curr_t - tmpt, 2);
+      std::cout << "curr_t: " << curr_t <<std::endl;
+      std::cout << "start_v: " << start_v <<std::endl;
+      std::cout << "tmpv: " << tmpv <<std::endl;
+      std::cout << "tmpt: " << tmpt <<std::endl;
+      std::cout << "curr_s: " << curr_s <<std::endl;
+      std::cout << "curr_v1: " << curr_v <<std::endl;
+      std::cout << "curr_s: " << curr_s <<std::endl;
       return ;
     }
   }
@@ -296,10 +323,8 @@ bool GetTrajectory(PlanningResult &planning_result) {
       std::vector<double> y = current_node->GetSeqY();
       std::vector<double> theta = current_node->GetSeqTheta();
       if (x.size() != y.size() || x.size() != theta.size() || x.empty()) {
-        std::cout<< "33" << std::endl;
         return false;
       }
-      std::cout<< "34" << std::endl;
       std::reverse(x.begin(), x.end());
       std::reverse(y.begin(), y.end());
       std::reverse(theta.begin(), theta.end());
@@ -462,7 +487,7 @@ private:
     }
   };
   double max_acc = 0.2;
-  double max_v = 0.5;
+  double max_v = 0.6;
   double end_v = 0.0; // 这里需要注意，每次搜索不是到当前路线的航点结束，而是将搜索终点局限在hight_map的区域内[routing只发了这一段&&search grid限制]
   SearchIn search_in_;
   std::shared_ptr<SearchNode> start_node_;

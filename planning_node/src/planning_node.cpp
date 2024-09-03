@@ -53,8 +53,7 @@ bool PlanningNode::CheckReachEnd() {
   double distance = std::hypot(dx, dy);
   std::cout << "distance:" << distance << std::endl;
   if (distance < reach_end_th_) {
-    target_heading_ =
-        search_in_.end_point.heading - search_in_.loc_point.heading;
+    target_heading_ = search_in_.end_point.heading;
     target_heading_ =
         target_heading_ + M_PI / 2.0 * search_in_.next_heading_class;
     return true;

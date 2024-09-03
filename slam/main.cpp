@@ -13,11 +13,11 @@
 #include <cmath>
 #include <ctime>
 
-#define COMMANDTOPIC "qt_command"
-#define NOTICETOPIC "qt_notice"
-#define ODOMTOPIC "lio_sam_ros2/mapping/re_location_odometry"
-#define ADDNODETOPIC "qt_add_node"
-#define ADDEDGETOPIC "qt_add_edge"
+#define COMMANDTOPIC "/qt_command"
+#define NOTICETOPIC "/qt_notice"
+#define ODOMTOPIC "/lio_sam_ros2/mapping/re_location_odometry"
+#define ADDNODETOPIC "/qt_add_node"
+#define ADDEDGETOPIC "/qt_add_edge"
 
 using namespace unitree::robot;
 using namespace std;
