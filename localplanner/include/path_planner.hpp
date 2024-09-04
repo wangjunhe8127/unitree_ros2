@@ -1,11 +1,33 @@
 #include "common.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include <nav_msgs/msg/path.hpp>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <sensor_msgs/msg/joy.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/float32.hpp>
 #include <string>
 #include <vector>
+using namespace std;
+const int pathNum = 343;
+const int groupNum = 7;
+float gridVoxelSize = 0.02;
+float searchRadius = 0.55;
+float gridVoxelOffsetX = 3.2;
+float gridVoxelOffsetY = 4.5;
+const int gridVoxelNumX = 161;
+const int gridVoxelNumY = 451;
+const int gridVoxelNum = gridVoxelNumX * gridVoxelNumY;
+const int laserCloudStackNum = 1;
+pcl::PointCloud<pcl::PointXYZI>::Ptr
+    plannerCloud(new pcl::PointCloud<pcl::PointXYZI>());
+pcl::PointCloud<pcl::PointXYZI>::Ptr
+    plannerCloudCrop(new pcl::PointCloud<pcl::PointXYZI>());
+int pathList[pathNum] = {0};
 class PathPlanCore {
 public:
   PathPlanCore() {}
@@ -30,7 +52,7 @@ public:
   bool process(const unitree::planning::StatePoint &loc_point,
                const unitree::planning::StatePoint &goal_point,
                pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloudDwz,
-               nav_msgs::msg::Path &nav_path) {
+               nav_msgs::msg::Path &path) {
     double joySpeed = 1.0;
     double adjacentRange = 3.0;
     // 循环保存点云
@@ -43,16 +65,16 @@ public:
       *plannerCloud += *laserCloudStack[i];
     }
     // ego sin/cos
-    float sinVehicleYaw = sin(loc_point.yaw);
-    float cosVehicleYaw = cos(loc_point.yaw);
+    float sinVehicleYaw = sin(loc_point.heading);
+    float cosVehicleYaw = cos(loc_point.heading);
     // 根据距离选取点云，并将点云转换到ego坐标系
     pcl::PointXYZI point;
     plannerCloudCrop->clear();
     int plannerCloudSize = plannerCloud->points.size();
     for (int i = 0; i < plannerCloudSize; i++) {
-      float pointX1 = plannerCloud->points[i].x - vehicleX;
-      float pointY1 = plannerCloud->points[i].y - vehicleY;
-      float pointZ1 = plannerCloud->points[i].z - vehicleZ;
+      float pointX1 = plannerCloud->points[i].x - loc_point.x;
+      float pointY1 = plannerCloud->points[i].y - loc_point.y;
+      float pointZ1 = plannerCloud->points[i].z - loc_point.z;
 
       point.x = pointX1 * cosVehicleYaw + pointY1 * sinVehicleYaw;
       point.y = -pointX1 * sinVehicleYaw + pointY1 * cosVehicleYaw;
@@ -64,7 +86,7 @@ public:
         plannerCloudCrop->push_back(point);
       }
     }
-    // 
+    //
     float pathRange = adjacentRange;
     pathRange = adjacentRange * joySpeed;
     if (pathRange < minPathRange)
@@ -111,10 +133,7 @@ public:
         float h = plannerCloudCrop->points[i].intensity;
         float dis = sqrt(x * x + y * y);
         // 这个点是否有效
-        if (dis < pathRange / pathScale &&
-            (dis <= (relativeGoalDis + goalClearRange) / pathScale ||
-             !pathCropByGoal) &&
-            checkObstacle) {
+        if (dis < pathRange / pathScale) {
           // 这个点处有效的探索方向
           for (int rotDir = 0; rotDir < 36; rotDir++) {
             // 正负180
@@ -129,7 +148,7 @@ public:
             if (angDiff > dirThre && !dirToVehicle) {
               continue;
             }
-            // 
+            //
             float x2 = cos(rotAng) * x + sin(rotAng) * y;
             float y2 = -sin(rotAng) * x + cos(rotAng) * y;
             float scaleY = x2 / gridVoxelOffsetX +
@@ -147,7 +166,7 @@ public:
               int ind = gridVoxelNumY * indX + indY;
               int blockedPathByVoxelNum = correspondences[ind].size();
               for (int j = 0; j < blockedPathByVoxelNum; j++) {
-                if (h > obstacleHeightThre || !useTerrainAnalysis) {
+                if (h > obstacleHeightThre) {
                   clearPathList[pathNum * rotDir + correspondences[ind][j]]++;
                 } else {
                   if (pathPenaltyList[pathNum * rotDir +
@@ -202,6 +221,7 @@ public:
           else
             rotDirW = fabs(fabs(rotDir - 27) + 1);
           float groupDirW = 4 - fabs(pathList[i % pathNum] - 3);
+
           float score = (1 - sqrt(sqrt(dirWeight * dirDiff))) * rotDirW *
                         rotDirW * rotDirW * rotDirW * penaltyScore;
           if (relativeGoalDis < goalCloseDis)
@@ -225,8 +245,7 @@ public:
         if (maxScore < clearPathPerGroupScore[i] &&
             ((rotAng * 180.0 / M_PI > minObsAngCW &&
               rotAng * 180.0 / M_PI < minObsAngCCW) ||
-             (rotDeg > minObsAngCW && rotDeg < minObsAngCCW && twoWayDrive) ||
-             !checkRotObstacle)) {
+             (rotDeg > minObsAngCW && rotDeg < minObsAngCCW))) {
           maxScore = clearPathPerGroupScore[i];
           selectedGroupID = i;
         }
@@ -281,12 +300,34 @@ public:
   }
 
 private:
+  int readPlyHeader(FILE *filePtr) {
+    char str[50];
+    int val, pointNum;
+    string strCur, strLast;
+    while (strCur != "end_header") {
+      val = fscanf(filePtr, "%s", str);
+      if (val != 1) {
+        exit(1);
+      }
+
+      strLast = strCur;
+      strCur = string(str);
+
+      if (strCur == "vertex" && strLast == "element") {
+        val = fscanf(filePtr, "%d", &pointNum);
+        if (val != 1) {
+          exit(1);
+        }
+      }
+    }
+
+    return pointNum;
+  }
   void readStartPaths() {
     string fileName = pathFolder + "/startPaths.ply";
 
     FILE *filePtr = fopen(fileName.c_str(), "r");
     if (filePtr == NULL) {
-      RCLCPP_INFO(nh->get_logger(), "Cannot read input files, exit.");
       exit(1);
     }
 
@@ -301,7 +342,6 @@ private:
       val4 = fscanf(filePtr, "%d", &groupID);
 
       if (val1 != 1 || val2 != 1 || val3 != 1 || val4 != 1) {
-        RCLCPP_INFO(nh->get_logger(), "Error reading input files, exit.");
         exit(1);
       }
 
@@ -317,12 +357,10 @@ private:
 
     FILE *filePtr = fopen(fileName.c_str(), "r");
     if (filePtr == NULL) {
-      RCLCPP_INFO(nh->get_logger(), "Cannot read input files, exit.");
       exit(1);
     }
 
     if (pathNum != readPlyHeader(filePtr)) {
-      RCLCPP_INFO(nh->get_logger(), "Incorrect path number, exit.");
       exit(1);
     }
 
@@ -336,14 +374,13 @@ private:
       val5 = fscanf(filePtr, "%d", &groupID);
 
       if (val1 != 1 || val2 != 1 || val3 != 1 || val4 != 1 || val5 != 1) {
-        RCLCPP_INFO(nh->get_logger(), "Error reading input files, exit.");
         exit(1);
       }
 
       if (pathID >= 0 && pathID < pathNum && groupID >= 0 &&
           groupID < groupNum) {
         pathList[pathID] = groupID;
-        endDirPathList[pathID] = 2.0 * atan2(endY, endX) * 180 / PI;
+        endDirPathList[pathID] = 2.0 * atan2(endY, endX) * 180 / M_PI;
       }
     }
 
@@ -354,7 +391,6 @@ private:
 
     FILE *filePtr = fopen(fileName.c_str(), "r");
     if (filePtr == NULL) {
-      RCLCPP_INFO(nh->get_logger(), "Cannot read input files, exit.");
       exit(1);
     }
 
@@ -362,14 +398,12 @@ private:
     for (int i = 0; i < gridVoxelNum; i++) {
       val1 = fscanf(filePtr, "%d", &gridVoxelID);
       if (val1 != 1) {
-        RCLCPP_INFO(nh->get_logger(), "Error reading input files, exit.");
         exit(1);
       }
 
       while (1) {
         val1 = fscanf(filePtr, "%d", &pathID);
         if (val1 != 1) {
-          RCLCPP_INFO(nh->get_logger(), "Error reading input files, exit.");
           exit(1);
         }
 
@@ -391,7 +425,6 @@ private:
 
     FILE *filePtr = fopen(fileName.c_str(), "r");
     if (filePtr == NULL) {
-      RCLCPP_INFO(nh->get_logger(), "Cannot read input files, exit.");
       exit(1);
     }
 
@@ -409,7 +442,6 @@ private:
       val5 = fscanf(filePtr, "%f", &point.intensity);
 
       if (val1 != 1 || val2 != 1 || val3 != 1 || val4 != 1 || val5 != 1) {
-        RCLCPP_INFO(nh->get_logger(), "Error reading input files, exit.");
         exit(1);
       }
 
@@ -424,8 +456,16 @@ private:
 
     fclose(filePtr);
   }
+  std::string pathFolder = "/home/unitree/code/unitree_ros2/localplanner/paths";
+  double odomTime = 0.0;
+  double dirWeight = 0.02;
+  double goalCloseDis = 0.4;
+  double costScore = 0.02;
+  int pointPerPathThre = 2;
+  double goalClearRange = 0.5;
+  double joyDir = 0.0;
   double dirThre = 90.0;
-  bool dirToVehicle= false;
+  bool dirToVehicle = false;
   double laserVoxelSize = 0.05;
   double vehicleLength = 0.3;
   double vehicleWidth = 0.7;
@@ -433,20 +473,19 @@ private:
   double pathScale = 0.75;
   double minPathRange = 1.0;
   int laserCloudCount = 0;
-  const int groupNum = 7;
-  const int pathNum = 343;
-  const int gridVoxelNumX = 161;
-  const int gridVoxelNumY = 451;
-  const int gridVoxelNum = gridVoxelNumX * gridVoxelNumY;
+  double pathRangeStep = 0.5;
+  double pathScaleStep = 0.25;
+  double obstacleHeightThre = 0.3;
+  double groundHeightThre = 0.1;
+  double costHeightThre = 0.1;
+
   std::vector<int> correspondences[gridVoxelNum];
   pcl::PointCloud<pcl::PointXYZI>::Ptr paths[pathNum];
   pcl::PointCloud<pcl::PointXYZ>::Ptr startPaths[groupNum];
-  const int laserCloudStackNum = 1;
+
   pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloudStack[laserCloudStackNum];
   float endDirPathList[pathNum] = {0};
   int clearPathList[36 * pathNum] = {0};
   float pathPenaltyList[36 * pathNum] = {0};
   float clearPathPerGroupScore[36 * groupNum] = {0};
-  pcl::PointCloud<pcl::PointXYZI>::Ptr
-      plannerCloud(new pcl::PointCloud<pcl::PointXYZI>());
 };

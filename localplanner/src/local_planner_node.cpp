@@ -1,26 +1,26 @@
 
 #include "local_planner_node.hpp"
 #include "rclcpp/rclcpp.hpp"
-using std::placeholders::_1;
 
-LocalPlannerNode::LocalPlannerNode() : Node("LocalPlannerNode") {
+
+LocalPlannerNode::LocalPlannerNode() : Node("LocalPlannerNode"),  laserCloud(new pcl::PointCloud<pcl::PointXYZI>()),laserCloudCrop(new pcl::PointCloud<pcl::PointXYZI>()),pointcloud_(new pcl::PointCloud<pcl::PointXYZI>()) {
   loc_suber_ = this->create_subscription<geometry_msgs::msg::Pose>(
-      loc_topic_, 10, std::bind(&LocalPlannerNode::loc_callback, this, _1));
+      loc_topic_, 10, std::bind(&LocalPlannerNode::loc_callback, this, std::placeholders::_1));
   waypoint_suber_ = this->create_subscription<geometry_msgs::msg::Point>(
       waypoint_topic_, 10,
-      std::bind(&LocalPlannerNode::waypoint_callback, this, _1));
+      std::bind(&LocalPlannerNode::waypoint_callback, this, std::placeholders::_1));
   nav_status_suber_ = this->create_subscription<std_msgs::msg::Bool>(
       loc_topic_, 10,
-      std::bind(&LocalPlannerNode::nav_status_callback, this, _1));
-  pointcloud_suber_ = this->create_subscription<sensor_msgs::msg::PointCloud>(
+      std::bind(&LocalPlannerNode::nav_status_callback, this, std::placeholders::_1));
+  pointcloud_suber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       pointcloud_topic_, 10,
-      std::bind(&LocalPlannerNode::pointcloud_callback, this, _1));
+      std::bind(&LocalPlannerNode::pointcloud_callback, this, std::placeholders::_1));
 
   path_puber_ = this->create_publisher<nav_msgs::msg::Path>(path_topic_, 10);
   run_timer_ =
       this->create_wall_timer(std::chrono::milliseconds(ros_ms),
                               std::bind(&LocalPlannerNode::run_step, this));
-  laserDwzFilter.setLeafSize(laserVoxelSize, laserVoxelSize, laserVoxelSize);
+  laserDwzFilter.setLeafSize(.05, 0.05, .05);
   path_planner_ = std::make_shared<PathPlanCore>();
   path_planner_->init();
 }
@@ -71,7 +71,7 @@ void LocalPlannerNode::pointcloud_callback(
 void LocalPlannerNode::loc_callback(
     const geometry_msgs::msg::Pose::ConstSharedPtr data) {
   receive_loc_ = true;
-  odomTime = rclcpp::Time(odom->header.stamp).seconds();
+  // odomTime = rclcpp::Time(data->header.stamp).seconds();
   loc_point_.x = data->position.x;
   loc_point_.y = data->position.y;
   loc_point_.z = data->position.z;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);            // Initialize rclcpp
   rclcpp::TimerBase::SharedPtr timer_; // Create a timer callback object to send
                                        // sport request in time intervals
-  rclcpp::spin(std::make_shared<StateConvertNode>()); // Run ROS2 node
+  rclcpp::spin(std::make_shared<LocalPlannerNode>()); // Run ROS2 node
   rclcpp::shutdown();
   return 0;
 }

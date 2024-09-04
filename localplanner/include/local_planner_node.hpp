@@ -26,15 +26,16 @@ class LocalPlannerNode : public rclcpp::Node{
   std::string path_topic_ = "/planning/path";
   // topic callback
   void run_step();
-  void loc_callback();
-  void waypoint_callback();
-  void nav_status_callback();
-  void pointcloud_callback();
+  void loc_callback(const geometry_msgs::msg::Pose::ConstSharedPtr data);
+  void waypoint_callback(const geometry_msgs::msg::Point::ConstSharedPtr data);
+  void nav_status_callback(
+    const std_msgs::msg::Bool::ConstSharedPtr data);
+  void pointcloud_callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr data);
   // topic suber
   rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr loc_suber_;
   rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr waypoint_suber_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr nav_status_suber_;
-  rclcpp::Subscription<sensor_msgs::msg::PointCloud>::SharedPtr pointcloud_suber_;
+  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_suber_;
   // topic puber
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_puber_;
   // timer
@@ -53,9 +54,9 @@ class LocalPlannerNode : public rclcpp::Node{
   unitree::planning::StatePoint loc_point_;
   unitree::planning::StatePoint goal_point_;
   nav_msgs::msg::Path nav_path_;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloud(new pcl::PointCloud<pcl::PointXYZI>());
-  pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloudCrop(new pcl::PointCloud<pcl::PointXYZI>());
-  pcl::PointCloud<pcl::PointXYZI>::Ptr pointcloud_(new pcl::PointCloud<pcl::PointXYZI>());
+  pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloud;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloudCrop;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr pointcloud_;
   std::shared_ptr<PathPlanCore> path_planner_;
   pcl::VoxelGrid<pcl::PointXYZI> laserDwzFilter;
 };
