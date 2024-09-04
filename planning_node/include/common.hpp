@@ -18,6 +18,7 @@ struct MapPoint {
 struct StatePoint {
   double x;
   double y;
+  double z;
   double heading;
   double v;
   bool isEqual(const StatePoint& other, double epsilon = 1e-6) const {
