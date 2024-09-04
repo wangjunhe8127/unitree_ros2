@@ -60,12 +60,17 @@ void RoutingTesetNode::loc_callback() {
   try {
     // 从map到lidar获取变换
     geometry_msgs::msg::TransformStamped transformStamped =
-        tf_buffer.lookupTransform("map", "lidar", tf2::TimePointZero);
+        tf_buffer.lookupTransform("lidar", "map", tf2::TimePointZero);
     // 输出接收到的变换信息
-    RCLCPP_INFO(this->get_logger(), "Received transform: (%.2f, %.2f, %.2f)",
+    RCLCPP_INFO(this->get_logger(), "Received translation: (%.2f, %.2f, %.2f)",
                 transformStamped.transform.translation.x,
                 transformStamped.transform.translation.y,
                 transformStamped.transform.translation.z);
+    RCLCPP_INFO(this->get_logger(), "Received rotation: (%.2f, %.2f, %.2f, %.2f)",
+                transformStamped.transform.rotation.x,
+                transformStamped.transform.rotation.y,
+                transformStamped.transform.rotation.z,
+                transformStamped.transform.rotation.w);
     loc_pose_.position.x = transformStamped.transform.translation.x;
     loc_pose_.position.y = transformStamped.transform.translation.y;
     loc_pose_.position.z = transformStamped.transform.translation.z;
