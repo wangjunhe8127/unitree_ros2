@@ -10,7 +10,7 @@ LocalPlannerNode::LocalPlannerNode() : Node("LocalPlannerNode"),  laserCloud(new
       waypoint_topic_, 10,
       std::bind(&LocalPlannerNode::waypoint_callback, this, std::placeholders::_1));
   nav_status_suber_ = this->create_subscription<std_msgs::msg::Bool>(
-      loc_topic_, 10,
+      nav_status_topic_, 10,
       std::bind(&LocalPlannerNode::nav_status_callback, this, std::placeholders::_1));
   pointcloud_suber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       pointcloud_topic_, 10,
@@ -26,6 +26,7 @@ LocalPlannerNode::LocalPlannerNode() : Node("LocalPlannerNode"),  laserCloud(new
 }
 void LocalPlannerNode::run_step() {
   if (receive_loc_ && receive_goal_ && receive_pointcloud_) {
+    nav_path_.poses.clear();
     bool status =
         path_planner_->process(loc_point_, goal_point_, pointcloud_, nav_path_);
     path_puber_->publish(nav_path_);

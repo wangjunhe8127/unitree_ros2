@@ -276,8 +276,8 @@ public:
             break;
           }
         }
-        break;
         pathFound = true;
+        break;
       } else {
         if (pathScale >= minPathScale + pathScaleStep) {
           pathScale -= pathScaleStep;

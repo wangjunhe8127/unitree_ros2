@@ -104,6 +104,9 @@ bool RoutingTesetNode::check_waypoint_finish() {
     nav_status_.data = true;
     nav_status_puber_->publish(nav_status_);
     waypoint_idx_++;
+  } else {
+    nav_status_.data = true;
+    nav_status_puber_->publish(nav_status_);
   }
   return true;
 }

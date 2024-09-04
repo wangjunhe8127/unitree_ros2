@@ -22,7 +22,7 @@ class LocalPlannerNode : public rclcpp::Node{
   std::string loc_topic_ = "/routing/loc";
   std::string waypoint_topic_ = "/routing/waypoint";
   std::string nav_status_topic_ = "/routing/nav_status";
-  std::string pointcloud_topic_ = "map_cloud";
+  std::string pointcloud_topic_ = "/localizer/map_cloud";
   std::string path_topic_ = "/planning/path";
   // topic callback
   void run_step();
