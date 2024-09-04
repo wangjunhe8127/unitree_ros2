@@ -456,7 +456,7 @@ private:
 
     fclose(filePtr);
   }
-  std::string pathFolder = "/home/unitree/code/unitree_ros2/localplanner/paths";
+  std::string pathFolder = "/home/unitree/code/unitree_ros2/local_planner_node/paths";
   double odomTime = 0.0;
   double dirWeight = 0.02;
   double goalCloseDis = 0.4;
