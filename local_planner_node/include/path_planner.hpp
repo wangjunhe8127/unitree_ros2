@@ -106,6 +106,13 @@ public:
     else if (joyDir < -90.0)
       joyDir = -90.0;
     //
+    std::cout << "goal_point.x:" << goal_point.x << std::endl;
+    std::cout << "goal_point.x:" << goal_point.y << std::endl;
+    std::cout << "loc_point.heading:" << loc_point.heading << std::endl;
+    std::cout << "latan2(relativeGoalY, relativeGoalX):" << atan2(relativeGoalY, relativeGoalX) << std::endl;
+    
+    std::cout << "relativeGoal:" << relativeGoalX << " " << relativeGoalY << std::endl;
+    std::cout<<"joyyyyyyyyyyyyydir:"<< joyDir << std::endl;
     bool pathFound = false;
     float defPathScale = pathScale;
     pathScale = defPathScale * joySpeed;

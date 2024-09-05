@@ -27,6 +27,7 @@ public:
     float endDis = sqrt(endDisX * endDisX + endDisY * endDisY);
     float disX, disY, dis;
     // 找预瞄点
+    pathPointID = 0;
     while (pathPointID < pathSize - 1) {
       disX = path.poses[pathPointID].pose.position.x - vehicleXRel;
       disY = path.poses[pathPointID].pose.position.y - vehicleYRel;
@@ -40,9 +41,14 @@ public:
     // 计算航向误差
     disX = path.poses[pathPointID].pose.position.x - vehicleXRel;
     disY = path.poses[pathPointID].pose.position.y - vehicleYRel;
+    std::cout << "pathPointID:" << pathPointID <<std::endl;
+    std::cout << "disX:" << disX <<std::endl;
+    std::cout << "disY:" << disY <<std::endl;
     dis = sqrt(disX * disX + disY * disY);
     float pathDir = atan2(disY, disX);
     float dirDiff = -pathDir;
+    std::cout << "dis:" << dis<<std::endl;
+    std::cout << "pathDir:" << pathDir<<std::endl;
     if (dirDiff > M_PI)
       dirDiff -= 2 * M_PI;
     else if (dirDiff < -M_PI)
@@ -51,6 +57,7 @@ public:
       dirDiff -= 2 * M_PI;
     else if (dirDiff < -M_PI)
       dirDiff += 2 * M_PI;
+     std::cout << "pathDir:" << pathDir<<std::endl;
     // 计算yaw_rate
     if (fabs(vehicleSpeed) < 2.0 * maxAccel / 100.0)
       vehicleYawRate = -stopYawRateGain * dirDiff;
@@ -63,36 +70,53 @@ public:
     if (pathSize <= 1 || (dis < stopDisThre)) {
       vehicleYawRate = 0;
     }
+     std::cout << "vehicleYawRate:" << vehicleYawRate<<std::endl;
     // 计算speed
     float joySpeed2 = maxSpeed * joySpeed;
     if (pathSize <= 1) {
       joySpeed2 = 0;
+      std::cout << "joySpeed2" << joySpeed2 << std::endl;
     } else if (endDis / slowDwnDisThre < joySpeed) {
       joySpeed2 *= endDis / slowDwnDisThre;
+      std::cout << "joySpeed22" << joySpeed2 << std::endl;
     }
     float joySpeed3 = joySpeed2;
+    std::cout << "joySpeed3" << joySpeed3 << std::endl;
     if ((fabs(dirDiff) < dirDiffThre ||
          (dis < goalCloseDis && fabs(dirDiff) < omniDirDiffThre)) &&
         dis > stopDisThre) {
-      if (vehicleSpeed < joySpeed3)
-        vehicleSpeed += maxAccel / 100.0;
-      else if (vehicleSpeed > joySpeed3)
-        vehicleSpeed -= maxAccel / 100.0;
-    } else {
-      if (vehicleSpeed > 0)
-        vehicleSpeed -= maxAccel / 100.0;
-      else if (vehicleSpeed < 0)
-        vehicleSpeed += maxAccel / 100.0;
-    }
 
+      if (vehicleSpeed < joySpeed3){
+                vehicleSpeed += maxAccel / 100.0;
+        std::cout << "vehicleSpeed1" << vehicleSpeed << std::endl;
+      }
+
+      else if (vehicleSpeed > joySpeed3){
+         vehicleSpeed -= maxAccel / 100.0;
+               std::cout << "vehicleSpeed2" << vehicleSpeed << std::endl;
+      }
+       
+    } else {
+      if (vehicleSpeed > 0) {
+        vehicleSpeed -= maxAccel / 100.0;
+        std::cout << "vehicleSpeed3" << vehicleSpeed << std::endl;
+      }
+        
+      else if (vehicleSpeed < 0){
+        vehicleSpeed += maxAccel / 100.0;
+std::cout << "vehicleSpeed4" << vehicleSpeed << std::endl;
+      }
+        
+    }
+std::cout << "vehicleSpeed" << vehicleSpeed << std::endl;
     if (fabs(vehicleSpeed) > noRotSpeed)
       vehicleYawRate = 0;
     if (stop) {
       vehicleSpeed = 0.0;
       vehicleYawRate = 0.0;
     }
-    pubSkipCount--;
-    if (pubSkipCount < 0) {
+    std::cout << "finalvehicleSpeed:" << vehicleSpeed<<std::endl;
+std::cout << "finalvehicleYawRate:" << vehicleYawRate<<std::endl;
       if (fabs(vehicleSpeed) <= maxAccel / 100.0) {
         cmd_vel.twist.linear.x = 0;
         cmd_vel.twist.linear.y = 0;
@@ -101,25 +125,27 @@ public:
         cmd_vel.twist.linear.y = -sin(dirDiff) * vehicleSpeed;
       }
       cmd_vel.twist.angular.z = vehicleYawRate;
-      pubSkipCount = 1;
-      if (cmd_vel.twist.linear.x == 0 && cmd_vel.twist.linear.y == 0 &&
-          cmd_vel.twist.angular.z == 0) {
+
+      if ((cmd_vel.twist.linear.x == 0 && cmd_vel.twist.linear.y == 0 &&
+          cmd_vel.twist.angular.z == 0) || stop) {
+            std::cout << "stop"<<std::endl;
         sport_req.StopMove(req);
       } else {
         sport_req.Move(req, cmd_vel.twist.linear.x, cmd_vel.twist.linear.y,
                        cmd_vel.twist.angular.z);
       }
-    }
+      std::cout << "cmd_vel.twist.linear:" << cmd_vel.twist.linear.x << " " << cmd_vel.twist.linear.y << " " << cmd_vel.twist.angular.z<<std::endl;
   }
 
+
 private:
-  double yawRateGain = 7.5;
-  double lookAheadDis = 0.5;
-  double maxAccel = 2.0;
-  double stopYawRateGain = 1.5;
-  double maxYawRate = 80.0;
-  double stopDisThre = 0.3;
-  double maxSpeed = 1.0;
+  double yawRateGain = 1.0;
+  double lookAheadDis = 0.25;
+  double maxAccel = 1.5;
+  double stopYawRateGain = 1.0;
+  double maxYawRate = 50.0;
+  double stopDisThre = 0.2;
+  double maxSpeed = 0.3;
   double slowDwnDisThre = 0.75;
   double slowTime1 = 2.0;
   double slowTime2 = 2.0;
@@ -127,13 +153,13 @@ private:
   double slowRate1 = 0.25;
   double omniDirDiffThre = 1.5;
   double goalCloseDis = 0.4;
-  double vehicleSpeed = 0.0;
+  double vehicleSpeed = 0.3;
   double vehicleYawRate = 0.0;
   int pubSkipCount = 1;
   double noRotSpeed = 10.0;
   double dirDiffThre = 0.4;
   int pathPointID = 0;
-  double joySpeed = 0.7;
+  double joySpeed = 0.25;
   double slowInitTime = 0.0;
   geometry_msgs::msg::TwistStamped cmd_vel;
   SportClient sport_req;

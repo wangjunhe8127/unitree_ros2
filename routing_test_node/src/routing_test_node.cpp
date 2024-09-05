@@ -60,7 +60,7 @@ void RoutingTesetNode::loc_callback() {
   try {
     // 从map到lidar获取变换
     geometry_msgs::msg::TransformStamped transformStamped =
-        tf_buffer.lookupTransform("lidar", "map", tf2::TimePointZero);
+        tf_buffer.lookupTransform("map", "body", tf2::TimePointZero);
     // 输出接收到的变换信息
     RCLCPP_INFO(this->get_logger(), "Received translation: (%.2f, %.2f, %.2f)",
                 transformStamped.transform.translation.x,
@@ -92,7 +92,9 @@ bool RoutingTesetNode::check_waypoint_finish() {
   double loc_yaw, diff_dis, diff_yaw;
   diff_dis = std::hypot(loc_pose_.position.x - waypoints_.at(waypoint_idx_).at(0),
                         loc_pose_.position.y - waypoints_.at(waypoint_idx_).at(1));
+  std::cout << "routing_dis: " <<diff_dis << std::endl;
   loc_yaw = unitree::planning::convert_orientation_to_eular(loc_pose_.orientation);
+  std::cout << "loc_yaw: " <<loc_yaw << std::endl;
   diff_yaw = abs(loc_yaw - waypoints_.at(waypoint_idx_).at(2));
   if (diff_dis < diff_dis_th_ && diff_yaw < diff_yaw_th_) {
     if (waypoint_idx_ == static_cast<int>(waypoints_.size() - 1)) {

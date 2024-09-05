@@ -16,7 +16,7 @@ class ControlNode : public rclcpp::Node{
 
  private:
   // ros ms
-  int ros_ms{20};
+  int ros_ms{50};
   // topic name
   std::string loc_topic_ = "/routing/loc";
   std::string path_topic_ = "/planning/path";
