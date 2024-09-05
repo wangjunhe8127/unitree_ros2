@@ -39,16 +39,24 @@ public:
       }
     }
     // 计算航向误差
-    disX = path.poses[pathPointID].pose.position.x - vehicleXRel;
-    disY = path.poses[pathPointID].pose.position.y - vehicleYRel;
-    std::cout << "pathPointID:" << pathPointID <<std::endl;
-    std::cout << "disX:" << disX <<std::endl;
-    std::cout << "disY:" << disY <<std::endl;
+    double yaw_rate_w = 1.0;
+    std::cout << "all_num:" << (pathSize - 1)  <<std::endl;
+    int end_diff_idx = pathSize - 1 - pathPointID;
+    if (end_diff_idx < 5) {
+      yaw_rate_w = 0.0;
+    }
+    disX = path.poses[pathPointID].pose.position.x;
+    disY = path.poses[pathPointID].pose.position.y;
     dis = sqrt(disX * disX + disY * disY);
     float pathDir = atan2(disY, disX);
     float dirDiff = -pathDir;
     std::cout << "dis:" << dis<<std::endl;
     std::cout << "pathDir:" << pathDir<<std::endl;
+
+    std::cout << "pathPointID:" << pathPointID <<std::endl;
+    std::cout << "disX:" << disX <<std::endl;
+    std::cout << "disY:" << disY <<std::endl;
+
     if (dirDiff > M_PI)
       dirDiff -= 2 * M_PI;
     else if (dirDiff < -M_PI)
@@ -77,8 +85,7 @@ public:
       joySpeed2 = 0;
       std::cout << "joySpeed2" << joySpeed2 << std::endl;
     } else if (endDis / slowDwnDisThre < joySpeed) {
-      joySpeed2 *= endDis / slowDwnDisThre;
-      std::cout << "joySpeed22" << joySpeed2 << std::endl;
+      joySpeed2 *= endDis/slowDwnDisThre;
     }
     float joySpeed3 = joySpeed2;
     std::cout << "joySpeed3" << joySpeed3 << std::endl;
@@ -139,11 +146,11 @@ std::cout << "finalvehicleYawRate:" << vehicleYawRate<<std::endl;
 
 
 private:
-  double yawRateGain = 1.0;
+  double yawRateGain = 0.7;
   double lookAheadDis = 0.25;
   double maxAccel = 1.5;
-  double stopYawRateGain = 1.0;
-  double maxYawRate = 50.0;
+  double stopYawRateGain = 0.7;
+  double maxYawRate = 30.0;
   double stopDisThre = 0.2;
   double maxSpeed = 0.3;
   double slowDwnDisThre = 0.75;
