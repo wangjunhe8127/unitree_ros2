@@ -12,6 +12,7 @@
 #include "tf2_ros/buffer.h"
 #include "std_msgs/msg/bool.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 class RoutingTesetNode : public rclcpp::Node{
  public:
   RoutingTesetNode();
@@ -27,14 +28,14 @@ class RoutingTesetNode : public rclcpp::Node{
   std::string nav_status_topic_name_ = "/routing/nav_status";
   // std::string boundary_topic_name_ = "/routing/boundary";
   rclcpp::TimerBase::SharedPtr run_timer_;
-  rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr loc_puber_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr loc_puber_;
   rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr waypoint_puber_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr nav_status_puber_;
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener;
   // msg
   std_msgs::msg::Bool nav_status_;
-  geometry_msgs::msg::Pose loc_pose_;
+  nav_msgs::msg::Odometry loc_pose_;
   geometry_msgs::msg::Point waypoint_; // x,y,yaw分别填充x,y,z
 
   int waypoint_idx_{0};

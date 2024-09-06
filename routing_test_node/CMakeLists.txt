@@ -24,8 +24,9 @@ set (
   rosbag2_cpp
   geometry_msgs
   tf2_ros
+  nav_msgs
 )
-
+find_package(nav_msgs REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(unitree_go REQUIRED)
 find_package(rclcpp REQUIRED)

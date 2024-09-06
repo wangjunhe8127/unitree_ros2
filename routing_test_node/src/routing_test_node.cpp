@@ -8,7 +8,7 @@ RoutingTesetNode::RoutingTesetNode()
   waypoint_puber_ =
       this->create_publisher<geometry_msgs::msg::Point>(waypoint_topic_name_, 10);
   loc_puber_ =
-      this->create_publisher<geometry_msgs::msg::Pose>(loc_topic_name_, 10);
+      this->create_publisher<nav_msgs::msg::Odometry>(loc_topic_name_, 10);
   nav_status_puber_ =
       this->create_publisher<std_msgs::msg::Bool>(nav_status_topic_name_, 10);
   run_timer_ =
@@ -71,13 +71,13 @@ void RoutingTesetNode::loc_callback() {
                 transformStamped.transform.rotation.y,
                 transformStamped.transform.rotation.z,
                 transformStamped.transform.rotation.w);
-    loc_pose_.position.x = transformStamped.transform.translation.x;
-    loc_pose_.position.y = transformStamped.transform.translation.y;
-    loc_pose_.position.z = transformStamped.transform.translation.z;
-    loc_pose_.orientation.x = transformStamped.transform.rotation.x;
-    loc_pose_.orientation.y = transformStamped.transform.rotation.y;
-    loc_pose_.orientation.z = transformStamped.transform.rotation.z;
-    loc_pose_.orientation.w = transformStamped.transform.rotation.w;
+    loc_pose_.pose.pose.position.x = transformStamped.transform.translation.x;
+    loc_pose_.pose.pose.position.y = transformStamped.transform.translation.y;
+    loc_pose_.pose.pose.position.z = transformStamped.transform.translation.z;
+    loc_pose_.pose.pose.orientation.x = transformStamped.transform.rotation.x;
+    loc_pose_.pose.pose.orientation.y = transformStamped.transform.rotation.y;
+    loc_pose_.pose.pose.orientation.z = transformStamped.transform.rotation.z;
+    loc_pose_.pose.pose.orientation.w = transformStamped.transform.rotation.w;
     receive_loc_ = true;
   } catch (tf2::TransformException &ex) {
     RCLCPP_ERROR(this->get_logger(), "Could not transform: %s", ex.what());
@@ -90,10 +90,10 @@ bool RoutingTesetNode::check_waypoint_finish() {
     return false;
   }
   double loc_yaw, diff_dis, diff_yaw;
-  diff_dis = std::hypot(loc_pose_.position.x - waypoints_.at(waypoint_idx_).at(0),
-                        loc_pose_.position.y - waypoints_.at(waypoint_idx_).at(1));
+  diff_dis = std::hypot(loc_pose_.pose.pose.position.x - waypoints_.at(waypoint_idx_).at(0),
+                        loc_pose_.pose.pose.position.y - waypoints_.at(waypoint_idx_).at(1));
   std::cout << "routing_dis: " <<diff_dis << std::endl;
-  loc_yaw = unitree::planning::convert_orientation_to_eular(loc_pose_.orientation);
+  loc_yaw = unitree::planning::convert_orientation_to_eular(loc_pose_.pose.pose.orientation);
   std::cout << "loc_yaw: " <<loc_yaw << std::endl;
   diff_yaw = abs(loc_yaw - waypoints_.at(waypoint_idx_).at(2));
   if (diff_dis < diff_dis_th_ && diff_yaw < diff_yaw_th_) {
