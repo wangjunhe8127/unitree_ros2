@@ -136,7 +136,7 @@ std::cout << "finalvehicleYawRate:" << vehicleYawRate<<std::endl;
       if ((cmd_vel.twist.linear.x == 0 && cmd_vel.twist.linear.y == 0 &&
           cmd_vel.twist.angular.z == 0) || stop) {
             std::cout << "stop"<<std::endl;
-        sport_req.StopMove(req);
+        // sport_req.StopMove(req);
       } else {
         sport_req.Move(req, cmd_vel.twist.linear.x, cmd_vel.twist.linear.y,
                        cmd_vel.twist.angular.z);

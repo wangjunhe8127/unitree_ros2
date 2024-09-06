@@ -14,13 +14,17 @@ RoutingTesetNode::RoutingTesetNode()
   run_timer_ =
       this->create_wall_timer(std::chrono::milliseconds(20),
                               std::bind(&RoutingTesetNode::run_step, this));
+  r_puber_ = this->create_publisher<unitree_go::msg::DogControlCommand>(
+      r_control_topic_name_, 10);
   load_waypoints("/home/unitree/code/unitree_ros2/routing_test_node/waypoints.txt");
+  motion_core = std::make_shared<unitree::planning::MotionCore>(0.1,0.01,0.001,1.0/50);
 }
 void RoutingTesetNode::run_step() {
   loc_callback();
   if (receive_loc_) {
     loc_puber_->publish(loc_pose_);
     send_waypoint();
+    control_r();
   }
 }
 bool RoutingTesetNode::load_waypoints(const std::string &waypoint_path) {
@@ -83,21 +87,35 @@ void RoutingTesetNode::loc_callback() {
     RCLCPP_ERROR(this->get_logger(), "Could not transform: %s", ex.what());
   }
 }
+void RoutingTesetNode::control_r() {
+  if (arrive_end_) {
+    if (waypoint_idx_ != static_cast<int>(waypoints_.size() - 1)) {
+      double loc_yaw = unitree::planning::convert_orientation_to_eular(loc_pose_.pose.pose.orientation);
+      double diff_yaw = abs(loc_yaw - waypoints_.at(waypoint_idx_).at(2));
+      if (diff_yaw < diff_yaw_th_) {
+        waypoint_idx_++;
+        motion_core->ResetPoseControl();
+        arrive_end_ = false;
+      } else {
+        command_ = motion_core->PoseControl(loc_yaw, waypoints_.at(waypoint_idx_).at(2));
+        r_puber_->publish(command_);
+      }
+    }
+      
+  }
+}
+
 bool RoutingTesetNode::check_waypoint_finish() {
   if (arrive_end_) {
     nav_status_.data = false;
     nav_status_puber_->publish(nav_status_);
     return false;
   }
-  double loc_yaw, diff_dis, diff_yaw;
+  double diff_dis;
   diff_dis = std::hypot(loc_pose_.pose.pose.position.x - waypoints_.at(waypoint_idx_).at(0),
                         loc_pose_.pose.pose.position.y - waypoints_.at(waypoint_idx_).at(1));
   std::cout << "routing_dis: " <<diff_dis << std::endl;
-  loc_yaw = unitree::planning::convert_orientation_to_eular(loc_pose_.pose.pose.orientation);
-  std::cout << "loc_yaw: " <<loc_yaw << std::endl;
-  diff_yaw = abs(loc_yaw - waypoints_.at(waypoint_idx_).at(2));
-  if (diff_dis < diff_dis_th_ && diff_yaw < diff_yaw_th_) {
-    if (waypoint_idx_ == static_cast<int>(waypoints_.size() - 1)) {
+  if (diff_dis < diff_dis_th_ ) {
       arrive_end_ = true;
       nav_status_.data = false;
       nav_status_puber_->publish(nav_status_);
@@ -105,11 +123,6 @@ bool RoutingTesetNode::check_waypoint_finish() {
     }
     nav_status_.data = true;
     nav_status_puber_->publish(nav_status_);
-    waypoint_idx_++;
-  } else {
-    nav_status_.data = true;
-    nav_status_puber_->publish(nav_status_);
-  }
   return true;
 }
 void RoutingTesetNode::send_waypoint() {

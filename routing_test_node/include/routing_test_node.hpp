@@ -13,6 +13,7 @@
 #include "std_msgs/msg/bool.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "motion_core.hpp"
 class RoutingTesetNode : public rclcpp::Node{
  public:
   RoutingTesetNode();
@@ -23,9 +24,11 @@ class RoutingTesetNode : public rclcpp::Node{
   bool check_waypoint_finish();
   void loc_callback();
   void send_waypoint();
+  void control_r();
   std::string loc_topic_name_ = "/routing/loc";
   std::string waypoint_topic_name_ = "/routing/waypoint";
   std::string nav_status_topic_name_ = "/routing/nav_status";
+  std::string r_control_topic_name_ = "/control/dog_control_command";
   // std::string boundary_topic_name_ = "/routing/boundary";
   rclcpp::TimerBase::SharedPtr run_timer_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr loc_puber_;
@@ -44,4 +47,8 @@ class RoutingTesetNode : public rclcpp::Node{
   double diff_yaw_th_{0.1};
   bool receive_loc_{false};
   bool arrive_end_{false};
+
+  std::shared_ptr<unitree::planning::MotionCore> motion_core;
+  unitree_go::msg::DogControlCommand command_;
+  rclcpp::Publisher<unitree_go::msg::DogControlCommand>::SharedPtr r_puber_;
 };
