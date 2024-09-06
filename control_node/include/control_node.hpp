@@ -19,18 +19,18 @@ class ControlNode : public rclcpp::Node{
   int ros_ms{50};
   // topic name
   std::string loc_topic_ = "/routing/loc";
-  std::string path_topic_ = "/planning/path";
+  std::string path_topic_ = "/path";
   std::string stop_topic_ = "/routing/nav_status";
   std::string control_topic_ = "/api/sport/request";
   // suber/puber
   rclcpp::TimerBase::SharedPtr run_timer_;
-  rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr loc_suber_;
+  // rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr loc_suber_;
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_suber_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stop_suber_;
   rclcpp::Publisher<unitree_api::msg::Request>::SharedPtr control_puber_;
   // callback
   void run_step();
-  void loc_callback(const geometry_msgs::msg::Pose::ConstSharedPtr data);
+  // void loc_callback(const geometry_msgs::msg::Pose::ConstSharedPtr data);
   void path_callback(const nav_msgs::msg::Path::ConstSharedPtr data);
   void stop_callback(const std_msgs::msg::Bool::ConstSharedPtr data);
   // var

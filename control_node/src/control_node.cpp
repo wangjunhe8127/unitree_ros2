@@ -2,8 +2,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "control_node.hpp"
 ControlNode::ControlNode() : Node("ControlNode"){
-  loc_suber_ = this->create_subscription<geometry_msgs::msg::Pose>(
-      loc_topic_, 10, std::bind(&ControlNode::loc_callback, this, std::placeholders::_1));
+  // loc_suber_ = this->create_subscription<geometry_msgs::msg::Pose>(
+  //     loc_topic_, 10, std::bind(&ControlNode::loc_callback, this, std::placeholders::_1));
   path_suber_ = this->create_subscription<nav_msgs::msg::Path>(
       path_topic_, 10,
       std::bind(&ControlNode::path_callback, this, std::placeholders::_1));
@@ -17,20 +17,20 @@ ControlNode::ControlNode() : Node("ControlNode"){
   controller_ = std::make_shared<Controller>();
 }
 void ControlNode::run_step() {
-  if (receive_loc_ && receive_path_ && receive_stop_) {
+  if (receive_path_ && receive_stop_) {
     controller_->process(loc_point_, path_, stop_, req);
     control_puber_->publish(req);
   }
 }
-void ControlNode::loc_callback(
-    const geometry_msgs::msg::Pose::ConstSharedPtr data) {
-  receive_loc_ = true;
-  loc_point_.x = data->position.x;
-  loc_point_.y = data->position.y;
-  loc_point_.z = data->position.z;
-  loc_point_.heading =
-      unitree::planning::convert_orientation_to_eular(data->orientation);
-}
+// void ControlNode::loc_callback(
+//     const geometry_msgs::msg::Pose::ConstSharedPtr data) {
+//   receive_loc_ = true;
+//   loc_point_.x = data->position.x;
+//   loc_point_.y = data->position.y;
+//   loc_point_.z = data->position.z;
+//   loc_point_.heading =
+//       unitree::planning::convert_orientation_to_eular(data->orientation);
+// }
 void ControlNode::path_callback(
     const nav_msgs::msg::Path::ConstSharedPtr data) {
   receive_path_ = true;
