@@ -20,7 +20,7 @@
     <param name="lookAheadDis" value="0.5" />
     <param name="yawRateGain" value="0.8" />
     <param name="stopYawRateGain" value="0.8" />
-    <param name="maxYawRate" value="30.0" />
+    <param name="maxYawRate" value="10.0" />
     <param name="maxSpeed" value="$(var maxSpeed)" />
     <param name="maxAccel" value="2.0" />
     <param name="switchTimeThre" value="1.0" />

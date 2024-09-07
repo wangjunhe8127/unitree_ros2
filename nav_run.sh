@@ -1,5 +1,5 @@
 #!/bin/bash
-root_dir="/home/nvidia/code/unitree_ros2"
+root_dir="/home/unitree/code/unitree_ros2"
 SESSION_NAME="multi_pane_session"
 if tmux has-session -t $SESSION_NAME 2>/dev/null; then
     echo "Closing existing tmux session: $SESSION_NAME"
@@ -17,7 +17,7 @@ tmux split-window -h
 tmux send-keys "source /opt/ros/foxy/setup.sh" C-m
 tmux send-keys "source $root_dir/setup.sh" C-m
 tmux send-keys "source $root_dir/install/setup.sh" C-m
-# tmux send-keys "ros2 launch terrain_analysis terrain_analysis.launch" C-m
+tmux send-keys "ros2 launch terrain_analysis terrain_analysis.launch" C-m
 
 # plan
 tmux split-window -v

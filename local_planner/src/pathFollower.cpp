@@ -295,7 +295,8 @@ int main(int argc, char** argv) {
 
   // auto subStop =
   //     nh->create_subscription<std_msgs::msg::Int8>("/stop", 5, stopHandler);
-
+  // auto nav_status_suber_ =
+  //     nh->create_subscription<std_msgs::msg::Bool>(/routing/nav_status, 10, navsttus);
   auto pubSpeed =
       nh->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel", 5);
 
@@ -369,8 +370,8 @@ int main(int argc, char** argv) {
         vehicleYawRate = maxYawRate * PI / 180.0;
       else if (vehicleYawRate < -maxYawRate * PI / 180.0)
         vehicleYawRate = -maxYawRate * PI / 180.0;
-
-      endDis = (endDis - 0.3) > 0 ? endDis - 0.3 : 0.0;
+      std::cout << "end_dis:" << end_dis << std::endl;
+      endDis = (endDis - 0.15) > 0 ? endDis - 0.15 : 0.0;
       if (pathSize <= 1) {
         joySpeed2 = 0;
       } else if (endDis / slowDwnDisThre < joySpeed) {
@@ -400,10 +401,10 @@ int main(int argc, char** argv) {
 
       // if (fabs(vehicleSpeed) > noRotSpeed) vehicleYawRate = 0;
 
-      // if (endDis <= 0.01) {
-      //   vehicleSpeed = 0;
-      //   vehicleYawRate = 0;
-      // }
+      if (endDis <= 0.01) {
+        vehicleSpeed = 0;
+        vehicleYawRate = 0;
+      }
 
       // pubSkipCount--;
       // if (pubSkipCount < 0) {
