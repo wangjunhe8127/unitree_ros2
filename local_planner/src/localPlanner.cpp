@@ -45,6 +45,7 @@ double sensorOffsetX = 0;
 double sensorOffsetY = 0;
 bool twoWayDrive = true;
 double laserVoxelSize = 0.05;
+double BoundaryVoxelSize = 0.05;
 double terrainVoxelSize = 0.2;
 bool useTerrainAnalysis = true;
 bool checkObstacle = true;
@@ -102,7 +103,12 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr terrainCloudCrop(
     new pcl::PointCloud<pcl::PointXYZI>());
 pcl::PointCloud<pcl::PointXYZI>::Ptr terrainCloudDwz(
     new pcl::PointCloud<pcl::PointXYZI>());
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr BoundaryCloud(
+    new pcl::PointCloud<pcl::PointXYZI>());
+pcl::PointCloud<pcl::PointXYZI>::Ptr BoundaryCloudCrop(
+    new pcl::PointCloud<pcl::PointXYZI>());
+pcl::PointCloud<pcl::PointXYZI>::Ptr BoundaryCloudDwz(
+    new pcl::PointCloud<pcl::PointXYZI>());
 pcl::PointCloud<pcl::PointXYZI>::Ptr plannerCloud(
     new pcl::PointCloud<pcl::PointXYZI>());
 pcl::PointCloud<pcl::PointXYZI>::Ptr plannerCloudCrop(
@@ -118,6 +124,7 @@ std::vector<int> correspondences[gridVoxelNum];
 
 bool newLaserCloud = false;
 bool newTerrainCloud = false;
+bool newBoundaryCloud = false;
 
 double odomTime = 0;
 double joyTime = 0;
@@ -126,6 +133,7 @@ float vehicleRoll = 0, vehiclePitch = 0, vehicleYaw = 0;
 float vehicleX = 0, vehicleY = 0, vehicleZ = 0;
 
 pcl::VoxelGrid<pcl::PointXYZI> terrainDwzFilter;
+pcl::VoxelGrid<pcl::PointXYZI> BoundaryDwzFilter;
 rclcpp::Node::SharedPtr nh;
 
 void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom) {
@@ -145,7 +153,6 @@ void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom) {
   std::cout << "plannr_x: " << vehicleX <<std::endl;
   std::cout << "yaw:" << yaw << std::endl;
   vehicleZ = odom->pose.pose.position.z;
-  newTerrainCloud = true;
 }
 
 void terrainCloudHandler(
@@ -183,6 +190,39 @@ void terrainCloudHandler(
     newTerrainCloud = true;
   }
 }
+void BoundaryCloudHandler(
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr terrainCloud2) {
+    std::cout << "boundary_cloud_size: " << BoundaryCloud->points.size() << std::endl;
+    BoundaryCloud->clear();
+    pcl::fromROSMsg(*terrainCloud2, *BoundaryCloud);
+
+    pcl::PointXYZI point;
+    BoundaryCloudCrop->clear();
+    int BoundaryCloudSize = BoundaryCloud->points.size();
+    for (int i = 0; i < BoundaryCloudSize; i++) {
+      point = BoundaryCloud->points[i];
+
+      float pointX = point.x;
+      float pointY = point.y;
+      float pointZ = point.z;
+
+      float dis = sqrt((pointX - vehicleX) * (pointX - vehicleX) +
+                       (pointY - vehicleY) * (pointY - vehicleY));
+      if (dis < adjacentRange &&
+          (point.intensity > obstacleHeightThre || useCost)) {
+        point.x = pointX;
+        point.y = pointY;
+        point.z = pointZ;
+        BoundaryCloudCrop->push_back(point);
+      }
+    }
+
+    BoundaryCloudDwz->clear();
+    BoundaryDwzFilter.setInputCloud(BoundaryCloudCrop);
+    BoundaryDwzFilter.filter(*BoundaryCloudDwz);
+
+    newBoundaryCloud = true;
+  }
 
 void goalHandler(const geometry_msgs::msg::PointStamped::ConstSharedPtr goal) {
   std::cout << "waypoint: " << goal->point.x << " " << goal->point.y <<std::endl;
@@ -335,6 +375,7 @@ int main(int argc, char **argv) {
   nh->declare_parameter<bool>("twoWayDrive", twoWayDrive);
   nh->declare_parameter<double>("laserVoxelSize", laserVoxelSize);
   nh->declare_parameter<double>("terrainVoxelSize", terrainVoxelSize);
+  nh->declare_parameter<double>("BoundaryVoxelSize", BoundaryVoxelSize);
   nh->declare_parameter<bool>("useTerrainAnalysis", useTerrainAnalysis);
   nh->declare_parameter<bool>("checkObstacle", checkObstacle);
   nh->declare_parameter<bool>("checkRotObstacle", checkRotObstacle);
@@ -374,6 +415,7 @@ int main(int argc, char **argv) {
   nh->get_parameter("twoWayDrive", twoWayDrive);
   nh->get_parameter("laserVoxelSize", laserVoxelSize);
   nh->get_parameter("terrainVoxelSize", terrainVoxelSize);
+  nh->get_parameter("BoundaryVoxelSize", BoundaryVoxelSize);
   nh->get_parameter("useTerrainAnalysis", useTerrainAnalysis);
   nh->get_parameter("checkObstacle", checkObstacle);
   nh->get_parameter("checkRotObstacle", checkRotObstacle);
@@ -410,7 +452,8 @@ int main(int argc, char **argv) {
 
   auto subTerrainCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>(
       "/terrain_map", 5, terrainCloudHandler);
-
+  auto subBoundaryCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>(
+      "/boundary_map", 5, BoundaryCloudHandler);
   auto subGoal = nh->create_subscription<geometry_msgs::msg::PointStamped>(
       "/way_point", 5, goalHandler);
 
@@ -427,7 +470,8 @@ int main(int argc, char **argv) {
 
   terrainDwzFilter.setLeafSize(terrainVoxelSize, terrainVoxelSize,
                                terrainVoxelSize);
-
+  BoundaryDwzFilter.setLeafSize(BoundaryVoxelSize, BoundaryVoxelSize,
+                               BoundaryVoxelSize);
   readStartPaths();
   readPathList();
   readCorrespondences();
@@ -440,10 +484,15 @@ int main(int argc, char **argv) {
     rclcpp::spin_some(nh);
 
     // 更新障碍物云图
-    if (newTerrainCloud) {
-      newTerrainCloud = false;
+    if (newBoundaryCloud) {
       plannerCloud->clear();
-      *plannerCloud = *terrainCloudDwz;
+      newBoundaryCloud = false;
+      *plannerCloud = *BoundaryCloudDwz;
+      if (newTerrainCloud) {
+        plannerCloud->clear();
+        newTerrainCloud = false;
+        *plannerCloud += *terrainCloudDwz;
+      }
     }
     // 初始化roll, pitch, yaw
     float sinVehicleRoll = sin(vehicleRoll);

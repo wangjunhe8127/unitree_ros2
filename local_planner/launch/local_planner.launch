@@ -21,7 +21,8 @@
     <param name="sensorOffsetY" value="$(var sensorOffsetY)" />
     <param name="twoWayDrive" value="$(var twoWayDrive)" />
     <param name="laserVoxelSize" value="0.05" />
-    <param name="terrainVoxelSize" value="0.2" />
+    <param name="terrainVoxelSize" value="0.05" />
+    <param name="BoundaryVoxelSize" value="0.05" />
     <param name="useTerrainAnalysis" value="true" />
     <param name="checkObstacle" value="true" />
     <param name="checkRotObstacle" value="false" />
@@ -38,7 +39,7 @@
     <param name="dirWeight" value="0.02" />
     <param name="dirThre" value="90.0" />
     <param name="dirToVehicle" value="false" />
-    <param name="pathScale" value="0.75" />
+    <param name="pathScale" value="1.0" />
     <param name="minPathScale" value="0.5" />
     <param name="pathScaleStep" value="0.25" />
     <param name="pathScaleBySpeed" value="true" />

@@ -9,7 +9,7 @@ GenerateBoundaryPointsNode::GenerateBoundaryPointsNode()
   run_timer_ =
       this->create_wall_timer(std::chrono::milliseconds(20),
                               std::bind(&GenerateBoundaryPointsNode::run_step, this));
-  load_waypoints("/data/unitree_ros2/generate_boundary_points_node/boundary_points.txt");
+  load_waypoints("/home/unitree/code/unitree_ros2/generate_boundary_points_node/boundary_points.txt");
 }
 void GenerateBoundaryPointsNode::run_step() {
     output_cloud_.header.stamp = this->get_clock()->now();
@@ -66,7 +66,7 @@ bool GenerateBoundaryPointsNode::load_waypoints(const std::string &waypoint_path
         point.x = p_interp.x();
         point.y = p_interp.y();
         point.z = p_interp.z();
-        point.intensity = 0.0;
+        point.intensity = 3.0;
         cloud->points.push_back(point);
     }
   }

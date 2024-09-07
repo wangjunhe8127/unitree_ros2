@@ -11,6 +11,8 @@ HightMapNode::HightMapNode() : Node("HightMapNode") {
       "/utlidar/height_map_array", 10, std::bind(&HightMapNode::hight_map_callback, this, std::placeholders::_1));
   world_hight_map_puber_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
       "/world_hight_map", 10);
+  boundary_map_suber_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
+      "/boundary_map", 10, std::bind(&HightMapNode::boundary_map_callback, this, std::placeholders::_1));
   rivz_puber_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
       "/local_hight_map", 10);
   local_hight_map_ = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>());
@@ -24,6 +26,10 @@ void HightMapNode::sport_loc_callback(const unitree_go::msg::SportModeState::Con
   sport_loc_.pose.pose.orientation.z = data->imu_state.quaternion[3];
   sport_loc_.pose.pose.orientation.w = data->imu_state.quaternion[0];
   tf2::fromMsg(sport_loc_.pose.pose, transform_local_);
+}
+void HightMapNode::boundary_map_callback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr data) {
+  boundary_receive_ = true;
+  boundary_map_ = *data;
 }
 void HightMapNode::world_loc_callback(const nav_msgs::msg::Odometry::ConstSharedPtr data) {
   world_loc_ = *data;
@@ -74,6 +80,9 @@ void HightMapNode::convert_cloudpoints() {
 
     sensor_msgs::msg::PointCloud2 output_cloud;
     pcl::toROSMsg(*world_hight_map, output_cloud);
+    // if (boundary_receive_) {
+    //   output_cloud += boundary_map_;
+    // }
     output_cloud.header.stamp = this->now();
     output_cloud.header.frame_id = "map";
     world_hight_map_puber_->publish(output_cloud);

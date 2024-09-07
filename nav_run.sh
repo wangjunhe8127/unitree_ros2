@@ -30,7 +30,12 @@ tmux send-keys "source /opt/ros/foxy/setup.sh" C-m
 tmux send-keys "source $root_dir/setup.sh" C-m
 tmux send-keys "source $root_dir/install/setup.sh" C-m
 tmux send-keys "ros2 launch local_planner local_planner.launch" C-m
-
+# boundary
+tmux split-window -h
+tmux send-keys "source /opt/ros/foxy/setup.sh" C-m
+tmux send-keys "source $root_dir/setup.sh" C-m
+tmux send-keys "source $root_dir/install/setup.sh" C-m
+tmux send-keys "ros2 run generate_boundary_points_node generate_boundary_points_node_exe " C-m
 # control 需手动回车运行
 tmux select-pane -t 0
 tmux split-window -v
