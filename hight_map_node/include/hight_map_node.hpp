@@ -27,7 +27,7 @@ private:
   void world_loc_callback(const nav_msgs::msg::Odometry::ConstSharedPtr data);
   void hight_map_callback(const unitree_go::msg::HeightMap::ConstSharedPtr msg);
   void convert_cloudpoints();
-  void pubrviz(const std::vector<std::array<float, 3>> &cloud);
+  void pubrviz();
 
   rclcpp::Subscription<unitree_go::msg::SportModeState>::SharedPtr sport_loc_suber_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr world_loc_suber_;
@@ -41,5 +41,5 @@ private:
   tf2::Transform transform_local_;
   tf2::Transform transform_world_;
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr local_hight_map_;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr local_hight_map_;
 };

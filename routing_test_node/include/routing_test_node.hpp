@@ -44,7 +44,7 @@ class RoutingTesetNode : public rclcpp::Node{
 
   int waypoint_idx_{0};
   std::vector<std::vector<double>> waypoints_;
-  double diff_dis_th_{0.2};
+  double diff_dis_th_{0.3};
   double diff_yaw_th_{0.1};
   bool receive_loc_{false};
   bool arrive_end_{false};

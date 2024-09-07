@@ -370,7 +370,7 @@ int main(int argc, char** argv) {
         vehicleYawRate = maxYawRate * PI / 180.0;
       else if (vehicleYawRate < -maxYawRate * PI / 180.0)
         vehicleYawRate = -maxYawRate * PI / 180.0;
-      std::cout << "end_dis:" << end_dis << std::endl;
+      // std::cout << "end_dis:" << end_dis << std::endl;
       endDis = (endDis - 0.15) > 0 ? endDis - 0.15 : 0.0;
       if (pathSize <= 1) {
         joySpeed2 = 0;

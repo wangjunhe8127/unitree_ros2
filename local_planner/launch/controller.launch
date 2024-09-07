@@ -4,7 +4,7 @@
   <arg name="sensorOffsetY" default="0.0"/>
   <arg name="cameraOffsetZ" default="0.0"/>
   <arg name="twoWayDrive" default="false"/>
-  <arg name="maxSpeed" default="1.0"/>
+  <arg name="maxSpeed" default="0.8"/>
   <arg name="autonomyMode" default="true"/>
   <arg name="autonomySpeed" default="1.0"/>
   <arg name="joyToSpeedDelay" default="2.0"/>
@@ -18,9 +18,9 @@
     <param name="pubSkipNum" value="1" />
     <param name="twoWayDrive" value="$(var twoWayDrive)" />
     <param name="lookAheadDis" value="0.5" />
-    <param name="yawRateGain" value="0.8" />
-    <param name="stopYawRateGain" value="0.8" />
-    <param name="maxYawRate" value="10.0" />
+    <param name="yawRateGain" value="1.2" />
+    <param name="stopYawRateGain" value="1.2" />
+    <param name="maxYawRate" value="60.0" />
     <param name="maxSpeed" value="$(var maxSpeed)" />
     <param name="maxAccel" value="2.0" />
     <param name="switchTimeThre" value="1.0" />

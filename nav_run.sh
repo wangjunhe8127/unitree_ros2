@@ -18,7 +18,12 @@ tmux send-keys "source /opt/ros/foxy/setup.sh" C-m
 tmux send-keys "source $root_dir/setup.sh" C-m
 tmux send-keys "source $root_dir/install/setup.sh" C-m
 tmux send-keys "ros2 launch terrain_analysis terrain_analysis.launch" C-m
-
+# map
+tmux split-window -h
+tmux send-keys "source /opt/ros/foxy/setup.sh" C-m
+tmux send-keys "source $root_dir/setup.sh" C-m
+tmux send-keys "source $root_dir/install/setup.sh" C-m
+tmux send-keys "ros2 run hight_map_node hight_map_node_exe " C-m
 # plan
 tmux split-window -v
 tmux send-keys "source /opt/ros/foxy/setup.sh" C-m
