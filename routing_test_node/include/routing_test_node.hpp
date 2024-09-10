@@ -25,21 +25,21 @@ class RoutingTesetNode : public rclcpp::Node{
   void loc_callback();
   void send_waypoint();
   void control_r();
-  std::string loc_topic_name_ = "/routing/loc";
-  std::string waypoint_topic_name_ = "/routing/waypoint";
+  std::string loc_topic_name_ = "/state_estimation";
+  std::string waypoint_topic_name_ = "/way_point";
   std::string nav_status_topic_name_ = "/routing/nav_status";
   std::string r_control_topic_name_ = "/control/dog_control_command";
   // std::string boundary_topic_name_ = "/routing/boundary";
   rclcpp::TimerBase::SharedPtr run_timer_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr loc_puber_;
-  rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr waypoint_puber_;
+  rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr waypoint_puber_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr nav_status_puber_;
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener;
   // msg
   std_msgs::msg::Bool nav_status_;
   nav_msgs::msg::Odometry loc_pose_;
-  geometry_msgs::msg::Point waypoint_; // x,y,yaw分别填充x,y,z
+  geometry_msgs::msg::PointStamped waypoint_; // x,y,yaw分别填充x,y,z
 
   int waypoint_idx_{0};
   std::vector<std::vector<double>> waypoints_;

@@ -6,7 +6,7 @@ RoutingTesetNode::RoutingTesetNode()
     : Node("RoutingTesetNode"), tf_buffer(std::make_shared<rclcpp::Clock>()),
       tf_listener(tf_buffer) {
   waypoint_puber_ =
-      this->create_publisher<geometry_msgs::msg::Point>(waypoint_topic_name_, 10);
+      this->create_publisher<geometry_msgs::msg::PointStamped>(waypoint_topic_name_, 10);
   loc_puber_ =
       this->create_publisher<nav_msgs::msg::Odometry>(loc_topic_name_, 10);
   nav_status_puber_ =
@@ -75,6 +75,8 @@ void RoutingTesetNode::loc_callback() {
                 transformStamped.transform.rotation.y,
                 transformStamped.transform.rotation.z,
                 transformStamped.transform.rotation.w);
+    loc_pose_.header.stamp = ros::Time::now();
+    loc_pose_.header.frame_id = "map";
     loc_pose_.pose.pose.position.x = transformStamped.transform.translation.x;
     loc_pose_.pose.pose.position.y = transformStamped.transform.translation.y;
     loc_pose_.pose.pose.position.z = transformStamped.transform.translation.z;
@@ -116,9 +118,10 @@ bool RoutingTesetNode::check_waypoint_finish() {
                         loc_pose_.pose.pose.position.y - waypoints_.at(waypoint_idx_).at(1));
   std::cout << "routing_dis: " <<diff_dis << std::endl;
   if (diff_dis < diff_dis_th_ ) {
-      arrive_end_ = true;
+      // arrive_end_ = true; //默认不使用单独旋转
       nav_status_.data = false;
       nav_status_puber_->publish(nav_status_);
+      waypoint_idx_++;
       return false;
     }
     nav_status_.data = true;
@@ -127,9 +130,11 @@ bool RoutingTesetNode::check_waypoint_finish() {
 }
 void RoutingTesetNode::send_waypoint() {
   if (check_waypoint_finish()) {
-    waypoint_.x = waypoints_.at(waypoint_idx_).at(0);
-    waypoint_.y = waypoints_.at(waypoint_idx_).at(1);
-    waypoint_.z = waypoints_.at(waypoint_idx_).at(2);
+    waypoint_.header.stamp = ros::Time::now();
+    waypoint_.header.frame_id = "map";
+    waypoint_.point.x = waypoints_.at(waypoint_idx_).at(0);
+    waypoint_.point.y = waypoints_.at(waypoint_idx_).at(1);
+    waypoint_.point.z = waypoints_.at(waypoint_idx_).at(2);
     waypoint_puber_->publish(waypoint_);
   }
 }
