@@ -12,6 +12,7 @@
 #include "tf2_ros/buffer.h"
 #include "std_msgs/msg/bool.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include <geometry_msgs/msg/point_stamped.hpp>
 #include "nav_msgs/msg/odometry.hpp"
 #include "motion_core.hpp"
 class RoutingTesetNode : public rclcpp::Node{

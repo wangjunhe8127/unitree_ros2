@@ -359,7 +359,7 @@ int main(int argc, char** argv) {
 
       float joySpeed2 = maxSpeed * joySpeed;
 
-      if (fabs(vehicleSpeed) < 2.0 * maxAccel / 100.0)
+      if (fabs(vehicleSpeed) < 2.0 * maxAccel / 10.0)
         vehicleYawRate = -stopYawRateGain * dirDiff;
       else
         vehicleYawRate = -yawRateGain * dirDiff;
@@ -387,14 +387,14 @@ int main(int argc, char** argv) {
            (dis < goalCloseDis && fabs(dirDiff) < omniDirDiffThre)) &&
           dis > stopDisThre) {
         if (vehicleSpeed < joySpeed3)
-          vehicleSpeed += maxAccel / 100.0;
+          vehicleSpeed += maxAccel / 10.0;
         else if (vehicleSpeed > joySpeed3)
-          vehicleSpeed -= maxAccel / 100.0;
+          vehicleSpeed -= maxAccel / 10.0;
       } else {
         if (vehicleSpeed > 0)
-          vehicleSpeed -= maxAccel / 100.0;
+          vehicleSpeed -= maxAccel / 10.0;
         else if (vehicleSpeed < 0)
-          vehicleSpeed += maxAccel / 100.0;
+          vehicleSpeed += maxAccel / 10.0;
       }
 
       // if (fabs(vehicleSpeed) > noRotSpeed) vehicleYawRate = 0;
@@ -408,7 +408,7 @@ int main(int argc, char** argv) {
       // if (pubSkipCount < 0) {
       cmd_vel.header.stamp =
           rclcpp::Time(static_cast<uint64_t>(odomTime * 1e9));
-      if (fabs(vehicleSpeed) <= maxAccel / 100.0) {
+      if (fabs(vehicleSpeed) <= maxAccel / 10.0) {
         cmd_vel.twist.linear.x = 0;
         cmd_vel.twist.linear.y = 0;
       } else {

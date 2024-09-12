@@ -684,7 +684,7 @@ int main(int argc, char **argv) {
         }
 
         path.header.stamp = rclcpp::Time(static_cast<uint64_t>(odomTime * 1e9));
-        path.header.frame_id = "body";
+        path.header.frame_id = "vehicle";
         pubPath->publish(path);
       }
 
@@ -709,7 +709,7 @@ int main(int argc, char **argv) {
       path.poses[0].pose.position.z = 0;
 
       path.header.stamp = rclcpp::Time(static_cast<uint64_t>(odomTime * 1e9));
-      path.header.frame_id = "body";
+      path.header.frame_id = "vehicle";
       pubPath->publish(path);
     }
 

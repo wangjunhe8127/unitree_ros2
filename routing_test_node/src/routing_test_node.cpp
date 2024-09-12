@@ -16,7 +16,7 @@ RoutingTesetNode::RoutingTesetNode()
                               std::bind(&RoutingTesetNode::run_step, this));
   r_puber_ = this->create_publisher<unitree_go::msg::DogControlCommand>(
       r_control_topic_name_, 10);
-  load_waypoints("/home/unitree/code/unitree_ros2/routing_test_node/waypoints.txt");
+  load_waypoints("~/code/unitree_ros2/routing_test_node/waypoints.txt");
   motion_core = std::make_shared<unitree::planning::MotionCore>(0.1,0.01,0.001,1.0/50);
 }
 void RoutingTesetNode::run_step() {
@@ -75,7 +75,7 @@ void RoutingTesetNode::loc_callback() {
                 transformStamped.transform.rotation.y,
                 transformStamped.transform.rotation.z,
                 transformStamped.transform.rotation.w);
-    loc_pose_.header.stamp = ros::Time::now();
+    loc_pose_.header.stamp = this->get_clock()->now();
     loc_pose_.header.frame_id = "map";
     loc_pose_.pose.pose.position.x = transformStamped.transform.translation.x;
     loc_pose_.pose.pose.position.y = transformStamped.transform.translation.y;
@@ -130,8 +130,8 @@ bool RoutingTesetNode::check_waypoint_finish() {
 }
 void RoutingTesetNode::send_waypoint() {
   if (check_waypoint_finish()) {
-    waypoint_.header.stamp = ros::Time::now();
-    waypoint_.header.frame_id = "map";
+    waypoint_.header.stamp = this->get_clock()->now();
+    // waypoint_.header.frame_id = "map";
     waypoint_.point.x = waypoints_.at(waypoint_idx_).at(0);
     waypoint_.point.y = waypoints_.at(waypoint_idx_).at(1);
     waypoint_.point.z = waypoints_.at(waypoint_idx_).at(2);
