@@ -126,6 +126,7 @@ void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom) {
   vehicleRoll = roll;
   vehiclePitch = pitch;
   vehicleYaw = yaw;
+  std::cout << "terrain_x:" << odom->pose.pose.position.x <<std::endl;
   vehicleX = odom->pose.pose.position.x;
   vehicleY = odom->pose.pose.position.y;
   vehicleZ = odom->pose.pose.position.z;
@@ -157,7 +158,7 @@ void laserCloudHandler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr laser
     systemInitTime = laserCloudTime;
     systemInited = true;
   }
-
+  std::cout << "terrain_cloud_size: " << laserCloud->points.size() <<std::endl;
   laserCloud->clear();
   pcl::fromROSMsg(*laserCloud2, *laserCloud);
 
@@ -272,7 +273,7 @@ int main(int argc, char **argv) {
 
   auto subOdometry = nh->create_subscription<nav_msgs::msg::Odometry>("/state_estimation", 5, odometryHandler);
 
-  auto subLaserCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>("/localizer/map_cloud", 5, laserCloudHandler);
+  auto subLaserCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>("/fastlio2/body_cloud", 5, laserCloudHandler);
 
   auto subJoystick = nh->create_subscription<sensor_msgs::msg::Joy>("/joy", 5, joystickHandler);
 

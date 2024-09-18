@@ -142,6 +142,8 @@ void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom) {
              sin(yaw) * sensorOffsetY;
   vehicleY = odom->pose.pose.position.y - sin(yaw) * sensorOffsetX -
              cos(yaw) * sensorOffsetY;
+  std::cout << "plannr_x: " << vehicleX <<std::endl;
+  std::cout << "yaw:" << yaw << std::endl;
   vehicleZ = odom->pose.pose.position.z;
   newTerrainCloud = true;
 }
@@ -149,6 +151,7 @@ void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom) {
 void terrainCloudHandler(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr terrainCloud2) {
   if (useTerrainAnalysis) {
+    std::cout << "plan_cloud_size: " << terrainCloud->points.size() << std::endl;
     terrainCloud->clear();
     pcl::fromROSMsg(*terrainCloud2, *terrainCloud);
 
@@ -182,6 +185,7 @@ void terrainCloudHandler(
 }
 
 void goalHandler(const geometry_msgs::msg::PointStamped::ConstSharedPtr goal) {
+  std::cout << "waypoint: " << goal->point.x << " " << goal->point.y <<std::endl;
   goalX = goal->point.x;
   goalY = goal->point.y;
 }
@@ -481,6 +485,7 @@ int main(int argc, char **argv) {
     relativeGoalDis =
         sqrt(relativeGoalX * relativeGoalX + relativeGoalY * relativeGoalY);
     joyDir = atan2(relativeGoalY, relativeGoalX) * 180 / PI;
+    std::cout << "goal target:" << joyDir << std::endl;
     if (!twoWayDrive) {
       if (joyDir > 90.0)
         joyDir = 90.0;
@@ -684,7 +689,7 @@ int main(int argc, char **argv) {
         }
 
         path.header.stamp = rclcpp::Time(static_cast<uint64_t>(odomTime * 1e9));
-        path.header.frame_id = "vehicle";
+        path.header.frame_id = "map";
         pubPath->publish(path);
       }
 
@@ -709,7 +714,7 @@ int main(int argc, char **argv) {
       path.poses[0].pose.position.z = 0;
 
       path.header.stamp = rclcpp::Time(static_cast<uint64_t>(odomTime * 1e9));
-      path.header.frame_id = "vehicle";
+      path.header.frame_id = "map";
       pubPath->publish(path);
     }
 

@@ -16,7 +16,7 @@ RoutingTesetNode::RoutingTesetNode()
                               std::bind(&RoutingTesetNode::run_step, this));
   r_puber_ = this->create_publisher<unitree_go::msg::DogControlCommand>(
       r_control_topic_name_, 10);
-  load_waypoints("~/code/unitree_ros2/routing_test_node/waypoints.txt");
+  load_waypoints("/home/nvidia/code/unitree_ros2/routing_test_node/waypoints.txt");
   motion_core = std::make_shared<unitree::planning::MotionCore>(0.1,0.01,0.001,1.0/50);
 }
 void RoutingTesetNode::run_step() {

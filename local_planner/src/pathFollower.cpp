@@ -304,7 +304,7 @@ int main(int argc, char** argv) {
 
   geometry_msgs::msg::TwistStamped cmd_vel;
   cmd_vel.header.frame_id = "vehicle";
-
+  autonomyMode = true;
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;
 
@@ -313,7 +313,7 @@ int main(int argc, char** argv) {
     else if (joySpeed > 1.0)
       joySpeed = 1.0;
   }
-
+  std::cout << "speed" << joySpeed << std::endl;
   rclcpp::Rate rate(10);
   bool status = rclcpp::ok();
   while (status) {
@@ -358,6 +358,7 @@ int main(int argc, char** argv) {
         dirDiff += 2 * PI;
 
       float joySpeed2 = maxSpeed * joySpeed;
+      std::cout << "diff yaw:" << dirDiff << std::endl;
 
       if (fabs(vehicleSpeed) < 2.0 * maxAccel / 10.0)
         vehicleYawRate = -stopYawRateGain * dirDiff;
@@ -375,7 +376,7 @@ int main(int argc, char** argv) {
       } else if (endDis / slowDwnDisThre < joySpeed) {
         joySpeed2 *= endDis / slowDwnDisThre;
       }
-
+      std::cout << "joy speed 2:" << joySpeed2;
       float joySpeed3 = joySpeed2;
       // if (odomTime < slowInitTime + slowTime1 && slowInitTime > 0)
       //   joySpeed3 *= slowRate1;
@@ -399,10 +400,10 @@ int main(int argc, char** argv) {
 
       // if (fabs(vehicleSpeed) > noRotSpeed) vehicleYawRate = 0;
 
-      if (odomTime < stopInitTime + stopTime && stopInitTime > 0 && endDis <= 0.01) {
-        vehicleSpeed = 0;
-        vehicleYawRate = 0;
-      }
+      // if (endDis <= 0.01) {
+      //   vehicleSpeed = 0;
+      //   vehicleYawRate = 0;
+      // }
 
       // pubSkipCount--;
       // if (pubSkipCount < 0) {
@@ -422,6 +423,7 @@ int main(int argc, char** argv) {
       pubSkipCount = pubSkipNum;
 
       if (is_real_robot) {
+        std::cout <<"real_robot" << std::endl;
         if (cmd_vel.twist.linear.x == 0 && cmd_vel.twist.linear.y == 0 &&
             cmd_vel.twist.angular.z == 0) {
           sport_req.StopMove(req);
