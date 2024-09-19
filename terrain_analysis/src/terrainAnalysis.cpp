@@ -677,7 +677,7 @@ int main(int argc, char **argv) {
             point.y =
                 planarVoxelSize * (indY - planarVoxelHalfWidth) + vehicleY;
             point.z = vehicleZ;
-            point.intensity = vehicleHeight;
+            point.intensity = 0.0;
 
             point.x -= planarVoxelSize / 4.0;
             point.y -= planarVoxelSize / 4.0;
