@@ -25,9 +25,9 @@ class RTSPStreamer : public rclcpp::Node {
     this->declare_parameter<bool>("master_enable", true);
     this->declare_parameter<bool>("slave_enable", false);
 
-    std::string rtsp_url_master =
+    rtsp_url_master =
         this->get_parameter("rtsp_url_master").as_string();
-    std::string rtsp_url_slave =
+    rtsp_url_slave =
         this->get_parameter("rtsp_url_slave").as_string();
     std::string topic_name_master =
         this->get_parameter("topic_name_master").as_string();
@@ -61,7 +61,7 @@ class RTSPStreamer : public rclcpp::Node {
           topic_name_master, 10);
       // Timers
       timer_1_ = this->create_wall_timer(
-          std::chrono::milliseconds(50),  // 20 Hz
+          std::chrono::milliseconds(10),  // 20 Hz
           std::bind(&RTSPStreamer::stream_callback_1, this));
     }
 
@@ -77,33 +77,31 @@ class RTSPStreamer : public rclcpp::Node {
       publisher_2_ =
           this->create_publisher<sensor_msgs::msg::Image>(topic_name_slave, 10);
       timer_2_ = this->create_wall_timer(
-          std::chrono::milliseconds(50),  // 20 Hz
+          std::chrono::milliseconds(100),  // 20 Hz
           std::bind(&RTSPStreamer::stream_callback_2, this));
     }
 
     timer_3_ = this->create_wall_timer(
-        std::chrono::milliseconds(100),  // 20 Hz
+        std::chrono::milliseconds(30),  // 20 Hz
         std::bind(&RTSPStreamer::gimbal_control_callback, this));
   }
 
  private:
   void gimbal_msg_callback(
       const unitree_go::msg::GimbalControl::SharedPtr msg) {
-        RCLCPP_WARN(this->get_logger(),
-                  "Failed to capture frame from RTSP stream 1");
     target_yaw_ = msg->yaw;
     target_pitch_ = msg->pitch;
     target_updated_ = true;
   }
 
   void gimbal_control_callback() {
-    gimbal_control_->angle_updated = true;
-    gimbal_control_->temp_updated = true;
+    // gimbal_control_->angle_updated = true;
+    // gimbal_control_->temp_updated = true;
+    
     // update angle and temp
-    if (!gimbal_control_->angle_updated || !gimbal_control_->temp_updated) {
-      gimbal_control_->requestGimbalPose();
+    if (!gimbal_control_->temp_updated) {
+      //gimbal_control_->requestGimbalPose();
       gimbal_control_->requestAreaTemp(0, 0, 20, 20, 2);
-      return;
     }
 
     if (gimbal_control_->angle_updated && target_updated_) {
@@ -113,7 +111,11 @@ class RTSPStreamer : public rclcpp::Node {
         std::cout << "target pitch:" << target_pitch_ << " target_yaw:" << target_yaw_ << std::endl;
         gimbal_control_->controlGimbalAngle(target_yaw_, target_pitch_);
       }
+    }else{
+      gimbal_control_->requestGimbalPose();
     }
+
+    gimbal_control_->receiveResponse();
 
     // update msg
     auto gimbal_status_msg = std::make_shared<unitree_go::msg::GimbalStatus>();
@@ -141,6 +143,12 @@ class RTSPStreamer : public rclcpp::Node {
     } else {
       RCLCPP_WARN(this->get_logger(),
                   "Failed to capture frame from RTSP stream 1");
+      cap_1_.open(rtsp_url_master);
+      if (!cap_1_.isOpened()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to open RTSP stream 1: %s",
+                     rtsp_url_master.c_str());
+        rclcpp::shutdown();
+      }
     }
   }
 
@@ -153,6 +161,12 @@ class RTSPStreamer : public rclcpp::Node {
     } else {
       RCLCPP_WARN(this->get_logger(),
                   "Failed to capture frame from RTSP stream 2");
+      cap_2_.open(rtsp_url_slave);
+      if (!cap_2_.isOpened()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to open RTSP stream 1: %s",
+                     rtsp_url_master.c_str());
+        rclcpp::shutdown();
+      }
     }
   }
 
@@ -170,6 +184,8 @@ class RTSPStreamer : public rclcpp::Node {
   double target_yaw_{0.0};
   double target_pitch_{0.0};
   bool target_updated_{false};
+  std::string rtsp_url_master;
+  std::string rtsp_url_slave;
 };
 
 int main(int argc, char** argv) {

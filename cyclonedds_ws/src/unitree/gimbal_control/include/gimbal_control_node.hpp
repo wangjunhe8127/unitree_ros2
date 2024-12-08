@@ -27,7 +27,7 @@ class GimbalControl {
 
   void requestGimbalPose() {
     std::vector<uint8_t> data = serializGimbalPose(0x01, 0x04);
-    std::vector<uint8_t> packet = generatePacket(0x25, data, true);
+    std::vector<uint8_t> packet = generatePacket(0x0D, {}, true);
     sendPacket(packet);
   }
 
@@ -53,7 +53,7 @@ class GimbalControl {
     if (pitch > 25.0) {
       pitch = 25.0;
     } else if (pitch < -90.0) {
-      pitch = 90.0;
+      pitch = -90.0;
     }
     int16_t yaw_int = static_cast<int16_t>(yaw * 10);
     int16_t pitch_int = static_cast<int16_t>(pitch * 10);
@@ -93,7 +93,7 @@ class GimbalControl {
     std::array<uint8_t, 1024> recv_buf;
     asio::ip::udp::endpoint sender_endpoint;
     size_t len = socket_.receive_from(asio::buffer(recv_buf), sender_endpoint);
-
+    // std::cout << "received len:" << len << std::endl;
     if (len > 0) {
       parseResponse(
           std::vector<uint8_t>(recv_buf.begin(), recv_buf.begin() + len));
@@ -171,13 +171,13 @@ class GimbalControl {
     // Handle response based on cmd_id
     if (cmd_id == 0x0D) {
       if (response.size() < 20) return;
-      yaw = (response[8] | (response[9] << 8)) / 1.0;
-      pitch = (response[10] | (response[11] << 8)) / 1.0;
-      roll = (response[12] | (response[13] << 8)) / 1.0;
+      yaw = (int16_t)(response[8] | (response[9] << 8)) / 10.0;
+      pitch = (int16_t)(response[10] | (response[11] << 8)) / 10.0;
+      roll = (int16_t)(response[12] | (response[13] << 8)) / 10.0;
       angle_updated = true;
-      std::cout << "Gimbal Pose - Yaw: " << yaw / 10.0
-                << ", Pitch: " << pitch / 10.0 << ", Roll: " << roll / 10.0
-                << std::endl;
+      //std::cout << "Gimbal Pose - Yaw: " << yaw / 10.0
+      //          << ", Pitch: " << pitch / 10.0 << ", Roll: " << roll / 10.0
+      //          << std::endl;
     } else if (cmd_id == 0x13) {
       if (response.size() < 30) return;
       //   uint16_t startx = (response[8] | (response[9] << 8)) / 1.0;
